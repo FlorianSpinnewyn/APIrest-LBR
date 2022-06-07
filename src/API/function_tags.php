@@ -70,8 +70,15 @@ function deleteTag( $request,$response,  $args) {
     if($res ){
         return $res;
     }
+
+    $res2 = checkIfOwnedTag($request,$response,$args);
+    if($res2 ){
+        return $res2;
+    }
+
+
     $tagDelete = $args["tag"];
-    checkPermission($tagDelete);
+
     $sql ="DELETE from tags WHERE id_tag = $tagDelete";
 
     try {
@@ -104,6 +111,12 @@ function modifyTag( $request,$response, $args) {
     if($res ){
         return $res;
     }
+
+    $res2 = checkIfOwnedTag($request,$response,$args);
+    if($res2 ){
+        return $res2;
+    }
+
     $tag = $args["tag"];
     $selection =$request->getParam("selection");
     $modif = $request->getParam("modif");

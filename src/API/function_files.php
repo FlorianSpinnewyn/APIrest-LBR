@@ -219,6 +219,11 @@ function addFileTags( $request,$response,  $args)
 
     $fichier = $args['file'];
     $tags = $request->getParam("tags");
+    $res2 = checkIfOwnedFile($request,$response,$args);
+    if($res2 ){
+        return $res2;
+    }
+
 
 
     for($i = 0;$i < count($tags);$i++) {
@@ -255,6 +260,11 @@ function deleteFileTags( $request,$response, $args){
     $fichier = $args['file'];
     $tags = $request->getParam("tags");
 
+    $res2 = checkIfOwnedFile($request,$response,$args);
+    if($res2 ){
+        return $res2;
+    }
+
     for($i = 0;$i < count($tags);$i++) {
         $sql = "DELETE from assigner where (id_file = '$fichier' AND id_tag = $tags[$i])";
 
@@ -286,7 +296,14 @@ function deleteFile( $request,$response,  $args) {
     if($res ){
         return $res;
     }
-    $fileDelete = $args["file"];
+
+    $res2 = checkIfOwnedFile($request,$response,$args);
+    if($res2 ){
+        return $res2;
+    }
+
+    $fileDelete = $args['file'];
+
     $date = date("Y-m-d H:i:s",strtotime("+30 days"));
     $sql ="UPDATE fichiers SET date_supr= '$date' WHERE nom_fichier='$fileDelete'";
 

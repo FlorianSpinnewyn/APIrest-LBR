@@ -34,7 +34,7 @@ function login($request,$response,$args){
     }catch(PDOException $e){
         echo '{"error": {"text": '.$e->getMessage().'}}';
     }
-
+    return $response->withStatus(401);
 }
 
 function logout($request,$response,$args){
@@ -47,7 +47,7 @@ function logout($request,$response,$args){
     session_destroy();
     session_write_close();
 
-   return $response->withHeader('Content-type', 'application/json')->withHeader("Set-Cookie", "PHPSESSID=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT");
+   return $response->withStatus(200)->withHeader('Content-type', 'application/json')->withHeader("Set-Cookie", "PHPSESSID=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT");
 
 }
 
@@ -159,5 +159,91 @@ function isSession($request,$response,$args){
 }
 
 
+
+function checkIfOwnedFile($request,$response,$args){
+    $fichier = $args['file'];
+    if($_SESSION['role']== 0){
+        $sql ="SELECT * FROM fichiers WHERE `ìd_user`=".$_SESSION['id'];
+        try {
+            $db = new DB();
+            $conn = $db->connect();
+
+            $stmt = $conn->query($sql);
+            $file = $stmt->fetch(PDO::FETCH_OBJ);
+
+            $db = null;
+            $inside = false;
+            for($i = 0; $i < count($file); $i++){
+                if($file[$i]->id_file == $fichier){
+                    $inside = true;
+                }
+            }
+            if(!$inside){
+                $error = array(
+                    "message"=> "Vous n'avez pas le droit d'ajouter des tags a ce fichier"
+                );
+                $response->getBody()->write(json_encode($error));
+                return $response
+                    ->withHeader('content-type', 'application/json')
+                    ->withStatus(403);
+            }
+            else{
+                return 0;
+            }
+
+        }catch (PDOException $e) {
+            $error = array(
+                "message"=> $e->getMessage()
+            );
+            return $response
+                ->withHeader('content-type', 'application/json')
+                ->withStatus(400);
+        }
+    }
+    return 1;
+}
+
+function checkIfOwnedTag($request,$response,$args){
+    $tag = $args['tag'];
+    if($_SESSION['role']== 0){
+        $sql ="SELECT * FROM tags WHERE `id_user`=".$_SESSION['id'];
+        try {
+            $db = new DB();
+            $conn = $db->connect();
+
+            $stmt = $conn->query($sql);
+            $tag = $stmt->fetch(PDO::FETCH_OBJ);
+
+            $db = null;
+            $inside = false;
+            for($i = 0; $i < count($tag); $i++){
+                if($tag[$i]->id_tag == $tag){
+                    $inside = true;
+                }
+            }
+            if(!$inside){
+                $error = array(
+                    "message"=> "Vous n'avez pas le droit d'ajouter des tags a ce fichier"
+                );
+                $response->getBody()->write(json_encode($error));
+                return $response
+                    ->withHeader('content-type', 'application/json')
+                    ->withStatus(403);
+            }
+            else{
+                return 0;
+            }
+
+        }catch (PDOException $e) {
+            $error = array(
+                "message"=> $e->getMessage()
+            );
+            return $response
+                ->withHeader('content-type', 'application/json')
+                ->withStatus(400);
+        }
+    }
+    return 1;
+}
 
 
