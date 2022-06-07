@@ -8,6 +8,7 @@ function getAllFiles($request,$response,$args) {
     if($res){
         return $res;
     }
+    $tags = $request->getParam("tag");
 
 
     if($_SESSION['role'] == 0){
@@ -29,7 +30,18 @@ function getAllFiles($request,$response,$args) {
         }
     }
 
-    $sql ="SELECT * FROM fichiers ";
+    $sql ="SELECT fichiers.* FROM fichiers,assigner ";
+    if(count($tags) > 0){
+        echo 'test';
+        $sql .= "WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
+        for($i = 0; $i < count($tags); $i++){
+            $sql .= $tags[$i];
+            if($i != count($tags) - 1){
+                $sql .= ",";
+            }
+        }
+        $sql .= ")";
+    }
     if($request->getParam('limit') AND $request->getParam('offset')){
         $sql .= " LIMIT ".$request->getParam('limit');
         $sql .= " OFFSET ".$request->getParam('offset');
@@ -60,10 +72,24 @@ function getAllFiles($request,$response,$args) {
         ->withStatus(400);
 }
 
+
 function getAllAllowedFiles($request, $response, $args)
 {
     $user = $_SESSION['id'];
-    $sql = "(SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user)))";
+    $tags = $request->getParam("tag");
+    $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT(";
+    $sql .="SELECT fichiers.* FROM fichiers,assigner ";
+    if(count($tags) > 0){
+        echo 'test';
+        $sql .= "WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
+        for($i = 0; $i < count($tags); $i++){
+            $sql .= $tags[$i];
+            if($i != count($tags) - 1){
+                $sql .= ",";
+            }
+        }
+        $sql .= "))";
+    }
 
 
     if($request->getParam('limit') !=''){
@@ -126,7 +152,6 @@ function getFile($request,$response, $args){
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
 }
-
 
 
 function getAllowedFile($request,$response, $args){
@@ -209,6 +234,7 @@ function addFile( $request,$response,  $args) {
         ->withStatus(400);
 }
 
+
 function addFileTags( $request,$response,  $args)
 {
     $res = authFilesTags($request,$response,$args);
@@ -290,6 +316,7 @@ function deleteFileTags( $request,$response, $args){
     return 'true';
 }
 
+
 function deleteFile( $request,$response,  $args) {
 
     $res = authFilesTags($request,$response,$args);
@@ -330,6 +357,28 @@ function deleteFile( $request,$response,  $args) {
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
 }
+
+
+function deleteTagInFiles($tag){
+
+    $sql ="DELETE FROM assigner WHERE id_tag='$tag'";
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+
+        $DB = null;
+        return $result;
+    }catch (PDOException $e) {
+        $error = array(
+            "message"=> $e->getMessage()
+        );
+        return $error;
+    }
+}
+
 
 function deleteUserInFiles($user){
     $sql ="UPDATE fichiers SET id_user= 1 WHERE id_user=$user";

@@ -2,6 +2,18 @@
 
 
 function getAllTags($request,$response,$args){
+
+    $res = isSession($request,$response,$args);
+
+    if($res ){
+        return $res;
+    }
+
+    if($_SESSION['role'] == 0){
+        return getAllowedTags($request,$response,$args);
+    }
+
+
     $sql ="SELECT id_tag,nom_tag,id_user,nom_categorie FROM tags";
 
     try {
@@ -26,6 +38,36 @@ function getAllTags($request,$response,$args){
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
 }
+
+
+function getAllowedTags($request, $response, $args)
+{
+    $sql = "(SELECT id_tag,nom_tag,id_user,nom_categorie FROM tags where id_user = " . $_SESSION['id']. ")UNION(SELECT id_tag,nom_tag,id_user,nom_categorie FROM tags where id_tag in(select id_tag from autoriser where id_user = " . $_SESSION['id'] . "))";
+
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+
+        $stmt = $conn->query($sql);
+        $files = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        $DB = null;
+        $response->getBody()->write(json_encode($files));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(200);
+    }catch (PDOException $e) {
+        $error = array(
+            "message" => $e->getMessage()
+        );
+    }
+    return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(400);
+
+
+}
+
 
 function addTag( $request,$response,  $args) {
     $res = authFilesTags($request,$response,$args);
@@ -64,6 +106,7 @@ function addTag( $request,$response,  $args) {
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
 }
+
 
 function deleteTag( $request,$response,  $args) {
     $res = authFilesTags($request,$response,$args);
@@ -106,6 +149,7 @@ function deleteTag( $request,$response,  $args) {
         ->withStatus(400);
 }
 
+
 function modifyTag( $request,$response, $args) {
     $res = authFilesTags($request,$response,$args);
     if($res ){
@@ -147,27 +191,6 @@ function modifyTag( $request,$response, $args) {
 }
 
 
-
-function deleteTagInFiles($tag){
-
-    $sql ="DELETE FROM assigner WHERE id_tag='$tag'";
-    try {
-        $DB = new DB();
-        $conn = $DB->connect();
-
-        $stmt = $conn->prepare($sql);
-        $result = $stmt->execute();
-
-        $DB = null;
-        return $result;
-    }catch (PDOException $e) {
-        $error = array(
-            "message"=> $e->getMessage()
-        );
-        return $error;
-    }
-}
-
 function deleteUserInTags($user,$response){
     $sql ="UPDATE tags SET id_user= 1 WHERE id_user=$user";
     try {
@@ -199,6 +222,7 @@ function deleteUserInTags($user,$response){
 
 
 }
+
 
 function deleteCategorieInTags($categorie){
     $sql ="UPDATE tags SET nom_categorie = 'autre' WHERE nom_categorie='$categorie'";
