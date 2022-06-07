@@ -1,8 +1,8 @@
 <?php
 
 
-function getAllTags($response,$args){
-    $sql ="SELECT nom_tag,mail,nom_categories FROM tags";
+function getAllTags($request,$response,$args){
+    $sql ="SELECT id_tag,nom_tag,id_user,nom_categorie FROM tags";
 
     try {
         $DB = new DB();
@@ -28,21 +28,24 @@ function getAllTags($response,$args){
 }
 
 function addTag( $request,$response,  $args) {
-
+    $res = authFilesTags($request,$response,$args);
+    if($res ){
+        return $res;
+    }
     $nom_tag=$request->getParam("nom_tag");
-    $mail=$request->getParam("mail");
-    $nom_categories=$request->getParam("nom_categories");
+    $id_user=$request->getParam("id_user");
+    $nom_categorie=$request->getParam("nom_categorie");
     
-    $sql ="INSERT INTO tags (nom_tag,mail,nom_categories) VALUE (:nom_tag,:mail,:nom_categories)";
+    $sql ="INSERT INTO tags (nom_tag,id_user,nom_categorie) VALUE (:nom_tag,:id_user,:nom_categorie)";
 
     try {
         $DB = new DB();
         $conn = $DB->connect();
         $stmt = $conn->prepare($sql);
 
-        $stmt->bindParam(':mail',  $mail);
+        $stmt->bindParam(':id_user',  $id_user);
         $stmt->bindParam(':nom_tag', $nom_tag);
-        $stmt->bindParam(':nom_categories', $nom_categories);
+        $stmt->bindParam(':nom_categorie', $nom_categorie);
 
         $result=$stmt->execute();
 
@@ -63,8 +66,49 @@ function addTag( $request,$response,  $args) {
 }
 
 function deleteTag( $request,$response,  $args) {
+    $res = authFilesTags($request,$response,$args);
+    if($res ){
+        return $res;
+    }
     $tagDelete = $args["tag"];
-    $sql ="DELETE from tags WHERE nom_tag = $tagDelete";
+    checkPermission($tagDelete);
+    $sql ="DELETE from tags WHERE id_tag = $tagDelete";
+
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+
+        $DB = null;
+        $response->getBody()->write(json_encode($result));
+        deleteTagInFiles($tagDelete);
+        deleteTagsInUsers($tagDelete);
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(200);
+    }catch (PDOException $e) {
+        $error = array(
+            "message"=> $e->getMessage()
+        );
+    }
+    $response->getBody()->write(json_encode($error));
+    return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(400);
+}
+
+function modifyTag( $request,$response, $args) {
+    $res = authFilesTags($request,$response,$args);
+    if($res ){
+        return $res;
+    }
+    $tag = $args["tag"];
+    $selection =$request->getParam("selection");
+    $modif = $request->getParam("modif");
+
+    $sql ="UPDATE tags SET $selection= '$modif' WHERE id_tag=$tag";
 
     try {
         $DB = new DB();
@@ -89,12 +133,11 @@ function deleteTag( $request,$response,  $args) {
         ->withStatus(400);
 }
 
-function MoveCategorie( $request,$response, $args) {
-    $tag = $args["tag"];
-    $newCategorie=$args["categorie"];
 
-    $sql ="UPDATE tags SET nom_categories= '$newCategorie' WHERE nom_tag='$tag'";
 
+function deleteTagInFiles($tag){
+
+    $sql ="DELETE FROM assigner WHERE id_tag='$tag'";
     try {
         $DB = new DB();
         $conn = $DB->connect();
@@ -103,26 +146,68 @@ function MoveCategorie( $request,$response, $args) {
         $result = $stmt->execute();
 
         $DB = null;
-        $response->getBody()->write(json_encode($result));
-        return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
+        return $result;
     }catch (PDOException $e) {
         $error = array(
             "message"=> $e->getMessage()
         );
+        return $error;
     }
-    $response->getBody()->write(json_encode($error));
-    return $response
-        ->withHeader('content-type', 'application/json')
-        ->withStatus(400);
 }
 
-function renameTag( $request,$response, $args) {
-    $tag = $args["tag"];
-    $newTag=$args["newTag"];
+function deleteUserInTags($user,$response){
+    $sql ="UPDATE tags SET id_user= 1 WHERE id_user=$user";
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
 
-    $sql ="UPDATE tags SET nom_tag= '$newTag' WHERE nom_tag='$tag'";
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+        $response->getBody()->write(json_encode($result));
+        $DB = null;
+
+    }catch (PDOException $e) {
+    }
+    $sql ="DELETE FROM autoriser WHERE id_user=$user";
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+        $response->getBody()->write(json_encode($result));
+        $DB = null;
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(200);
+    }catch (PDOException $e) {
+    }
+
+
+
+}
+
+function deleteCategorieInTags($categorie){
+    $sql ="UPDATE tags SET nom_categorie = 'autre' WHERE nom_categorie='$categorie'";
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+
+        $DB = null;
+        return $result;
+    }catch (PDOException $e) {
+        return array(
+            "message"=> $e->getMessage()
+        );
+    }
+}
+
+
+function changeCategoryInTags($categorie,$newCategorie){
+    $sql ="UPDATE `tags` SET `nom_categorie` = '$newCategorie' WHERE `nom_categorie`='$categorie'";
 
     try {
         $DB = new DB();
@@ -132,17 +217,10 @@ function renameTag( $request,$response, $args) {
         $result = $stmt->execute();
 
         $DB = null;
-        $response->getBody()->write(json_encode($result));
-        return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
+        return $result;
     }catch (PDOException $e) {
-        $error = array(
+        return array(
             "message"=> $e->getMessage()
         );
     }
-    $response->getBody()->write(json_encode($error));
-    return $response
-        ->withHeader('content-type', 'application/json')
-        ->withStatus(400);
 }
