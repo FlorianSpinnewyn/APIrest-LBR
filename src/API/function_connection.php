@@ -16,7 +16,7 @@ function login($request,$response,$args){
         $user = $stmt->fetch(PDO::FETCH_OBJ);
         $db = null;
 
-        if(true) {
+        if($user) {
             session_start([
                 'use_only_cookies' => 1,
                 'cookie_lifetime' => 0,
@@ -24,8 +24,8 @@ function login($request,$response,$args){
                 'cookie_httponly' => 1
             ]);
 
-            $_SESSION['role'] = 3;
-            $_SESSION['id'] = 2;
+            $_SESSION['role'] = $user->role;
+            $_SESSION['id'] = $user->id_user;
             return $response->withStatus(200)->getBody()->write("utilisateur connecte");
         }
         else{
