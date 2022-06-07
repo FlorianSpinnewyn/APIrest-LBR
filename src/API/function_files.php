@@ -30,9 +30,9 @@ function getAllFiles($request,$response,$args) {
     }
 
     $sql ="SELECT * FROM fichiers ";
-    if($request->getParam('limit') AND $request->getParam('offset')){
-        $sql .= " LIMIT ".$request->getParam('limit');
-        $sql .= " OFFSET ".$request->getParam('offset');
+    if($args['limit'] AND $args['offset']){
+        $sql .= " LIMIT ".$args['limit'];
+        $sql .= " OFFSET ".$args['offset'];
     }
 
 
