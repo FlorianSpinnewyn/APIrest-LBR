@@ -37,7 +37,7 @@ function login($request,$response,$args){
 
 }
 
-function logout($request,$response,$args,$app){
+function logout($request,$response,$args){
     $res = isSession($request,$response,$args);
     if($res)
         return $res;
@@ -140,8 +140,13 @@ function isSession($request,$response,$args){
         'cookie_secure' => 0,
         'cookie_httponly' => 1
     ]);
-    if(session_id() == '' || !isset($_SESSION) || session_status() === PHP_SESSION_NONE) {
-        session_abort();
+    if(session_id() == '' || !isset($_SESSION)||!isset($_SESSION['id']) || session_status() === PHP_SESSION_NONE) {
+
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', 0, $params['path'], $params['domain'], $params['secure'], isset($params['httponly']));
+        session_unset();
+        session_destroy();
+        session_write_close();
         $error = array(
             "message"=> "Vous n'etes pas connecte",
         );

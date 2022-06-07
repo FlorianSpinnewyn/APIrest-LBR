@@ -26,7 +26,7 @@ return function (App $app) {
     });
     $app->delete('/connection', function (Request $request, Response $response, array $args) use ($app, $container) {
 
-        return logout($request,$response,$args,$app);
+        return logout($request,$response,$args);
     });
 
 

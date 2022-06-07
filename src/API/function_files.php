@@ -4,7 +4,8 @@
 
 function getAllFiles($request,$response,$args) {
     $res = isSession($request,$response,$args);
-    if($res ){
+
+    if($res){
         return $res;
     }
 
@@ -29,9 +30,9 @@ function getAllFiles($request,$response,$args) {
     }
 
     $sql ="SELECT * FROM fichiers ";
-    if($request->getAttribute('limit')){
-        $sql .= " LIMIT ".$request->getAttribute('limit');
-        $sql .= " OFFSET ".$request->getAttribute('offset');
+    if($request->getParam('limit') AND $request->getParam('offset')){
+        $sql .= " LIMIT ".$request->getParam('limit');
+        $sql .= " OFFSET ".$request->getParam('offset');
     }
 
 
@@ -63,9 +64,12 @@ function getAllAllowedFiles($request, $response, $args)
 {
     $user = $_SESSION['id'];
     $sql = "(SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user)))";
-    if($request->getAttribute('limit')){
-        $sql .= " LIMIT ".$request->getAttribute('limit');
-        $sql .= " OFFSET ".$request->getAttribute('offset');
+
+
+    if($request->getParam('limit') !=''){
+        echo "test2";
+        $sql .= " LIMIT ".$request->getParam('limit');
+        $sql .= " OFFSET ".$request->getParam('offset');
     }
     
     try {
@@ -211,6 +215,8 @@ function addFileTags( $request,$response,  $args)
     if($res ){
         return $res;
     }
+
+
     $fichier = $args['file'];
     $tags = $request->getParam("tags");
 
