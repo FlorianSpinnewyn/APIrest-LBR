@@ -36,7 +36,7 @@ return function (App $app) {
     /**--FILES--**/
 
 
-    $app->get('/files', function (Request $request, Response $response, array $args) use ($container) {
+    $app->get('/files?limit={limit}&?offset={offset}', function (Request $request, Response $response, array $args) use ($container) {
         return getAllFiles($request,$response,$args);
     });
 
