@@ -24,8 +24,8 @@ function login($request,$response,$args){
                 'cookie_httponly' => 1
             ]);
 
-            $_SESSION['role'] = 0;
-            $_SESSION['id'] = 3;
+            $_SESSION['role'] = 3;
+            $_SESSION['id'] = 2;
             return $response->withStatus(200)->getBody()->write("utilisateur connecte");
         }
         else{
