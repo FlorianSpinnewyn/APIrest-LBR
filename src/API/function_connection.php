@@ -56,6 +56,7 @@ function isAdmin($request,$response,$args){
 
     if($res)
         return $res;
+
     if($_SESSION['role'] != 3){
         $error = array(
             "message"=> "Vous n'avez pas les droits pour effectuer cette action"
@@ -109,7 +110,7 @@ function authFilesTags($request, $response, $args){
             ->withHeader('content-type', 'application/json')
             ->withStatus(403);
     }
-    return $response;
+    return 0;
 }
 
 function authCategory($request, $response, $args){
@@ -127,7 +128,7 @@ function authCategory($request, $response, $args){
             ->withHeader('content-type', 'application/json')
             ->withStatus(403);
     }
-    return $response;
+    return 0;
 }
 
 
@@ -141,6 +142,7 @@ function isSession($request,$response,$args){
         'cookie_secure' => 0,
         'cookie_httponly' => 1
     ]);
+
     if(session_id() == '' || !isset($_SESSION)||!isset($_SESSION['id']) || session_status() === PHP_SESSION_NONE) {
 
         $params = session_get_cookie_params();
@@ -152,6 +154,7 @@ function isSession($request,$response,$args){
             "message"=> "Vous n'etes pas connecte",
         );
         $response->getBody()->write(json_encode($error));
+
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(401);
@@ -164,7 +167,7 @@ function isSession($request,$response,$args){
 function checkIfOwnedFile($request,$response,$args){
     $fichier = $args['file'];
     if($_SESSION['role']== 0){
-        $sql ="SELECT * FROM fichiers WHERE `ìd_user`=".$_SESSION['id'];
+        $sql ="SELECT * FROM fichiers WHERE id_user=".$_SESSION['id'];
         try {
             $db = new DB();
             $conn = $db->connect();

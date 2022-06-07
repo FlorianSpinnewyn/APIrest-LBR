@@ -43,8 +43,8 @@ function getAllFiles($request,$response,$args) {
         $sql .= ")";
     }
 
-    $sql ="SELECT * FROM fichiers ";
-    if($request->getQueryParam('limit')){
+
+    if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
         $sql .= " LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
@@ -121,6 +121,7 @@ function getAllAllowedFiles($request, $response, $args)
 
 
 function getFile($request,$response, $args){
+
     $res = isSession($request,$response,$args);
     if($res ){
         return $res;
@@ -141,8 +142,27 @@ function getFile($request,$response, $args){
 
         $db = null;
         $response->getBody()->write(json_encode($file));
+        $filename = $file->id_file.'.'.explode('.',$file->type)[1];
+
+        $path = "../files/";
+        $download_file =  $path.$filename;
+
+
+        if(!empty($filename)){
+            // Check file is exists on given path.
+            if(file_exists($download_file))
+            {
+                header('Content-Disposition: attachment; filename=' . $filename);
+                header('Content-Type: '.explode('.',$file->type)[0].'; charset=UTF-8"');
+                readfile($download_file);
+                exit;
+            }
+            else
+            {
+                echo 'File does not exists on given path';
+            }
+        }
         return $response
-            ->withHeader('content-type', 'application/json')
             ->withStatus(200);
     }catch (PDOException $e) {
         $error = array(
@@ -191,17 +211,40 @@ function getAllowedFile($request,$response, $args){
 
 function addFile( $request,$response,  $args) {
     $res = authFilesTags($request,$response,$args);
+    echo  $res;
     if($res ){
         return $res;
     }
 
     $nom=$request->getParam("fileName");
-    $idUser=$request->getParam("userId");
+    $idUser=$_SESSION['id'];
     $auteur=$request->getParam("author");
-    $taille=$request->getParam("size");
+    $taille=$_FILES['file']['size'];
     $dure=$request->getParam("lenght");
-    $type=$request->getParam("type");
+    $type='.'.explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
     $date = $request->getParam("date");
+    $str = $_FILES['file']['type']  . $type;
+    if($_FILES ['file']['error'] > 0){
+        $error = array(
+            "message"=> "Erreur lors du transfert"
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(400);
+    }
+    if($_FILES['file']['size'] > 1073741824){
+        $error = array(
+            "message"=> "Fichier trop volumineux"
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(400);
+    }
+    $file = $_FILES['file'];
+
+
 
     $sql ="INSERT INTO fichiers (nom_fichier,id_user,nom_prenom_auteur,taille,duree,date,type) VALUE (:nom,:idUser,:auteur,:taille,:dure,:date,:type)";
 
@@ -215,13 +258,17 @@ function addFile( $request,$response,  $args) {
         $stmt->bindParam(':auteur', $auteur);
         $stmt->bindParam(':taille', $taille);
         $stmt->bindParam(':dure', $dure);
-        $stmt->bindParam(':type', $type);
+
+        $stmt->bindParam(':type', $str);
         $stmt->bindParam(':date', $date);
 
         $result=$stmt->execute();
 
         $db = null;
         $response->getBody()->write(json_encode($result));
+
+        move_uploaded_file($_FILES['file']['tmp_name'], "../files/". $conn->lastInsertId().$type);
+
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -398,4 +445,21 @@ function deleteUserInFiles($user){
             "message"=> $e->getMessage()
         );
     }
+}
+
+
+
+function uploadFile( $request,$response,  $args) {
+
+    move_uploaded_file($_FILES["file"]["tmp_name"], "../files/".$_FILES["file"]["name"]);
+    foreach ($_FILES["file"]["error"] as $key => $error) {
+        if ($error == UPLOAD_ERR_OK) {
+            $tmp_name = $_FILES["file"]["tmp_name"][$key];
+            // basename() may prevent filesystem traversal attacks;
+            // further validation/sanitation of the filename may be appropriate
+            $name = basename($_FILES["file"]["name"][$key]);
+            move_uploaded_file($tmp_name, "../files/$name");
+        }
+    }
+
 }
