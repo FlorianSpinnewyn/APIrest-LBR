@@ -42,9 +42,11 @@ function getAllFiles($request,$response,$args) {
         }
         $sql .= ")";
     }
-    if($request->getParam('limit') AND $request->getParam('offset')){
-        $sql .= " LIMIT ".$request->getParam('limit');
-        $sql .= " OFFSET ".$request->getParam('offset');
+
+    $sql ="SELECT * FROM fichiers ";
+    if($request->getQueryParam('limit')){
+        $sql .= " LIMIT ".$request->getQueryParam('limit');
+        $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
 
 
@@ -92,10 +94,10 @@ function getAllAllowedFiles($request, $response, $args)
     }
 
 
-    if($request->getParam('limit') !=''){
-        echo "test2";
-        $sql .= " LIMIT ".$request->getParam('limit');
-        $sql .= " OFFSET ".$request->getParam('offset');
+
+    if($request->getQueryParam('limit')){
+        $sql .= " LIMIT ".$request->getQueryParam('limit');
+        $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
     
     try {
