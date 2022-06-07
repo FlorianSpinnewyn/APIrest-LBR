@@ -53,9 +53,9 @@ function logout($request,$response,$args){
 
 function isAdmin($request,$response,$args){
     $res = isSession($request,$response,$args);
+
     if($res)
         return $res;
-
     if($_SESSION['role'] != 3){
         $error = array(
             "message"=> "Vous n'avez pas les droits pour effectuer cette action"
@@ -65,7 +65,8 @@ function isAdmin($request,$response,$args){
             ->withHeader('content-type', 'application/json')
             ->withStatus(403);
     }
-    return $response;
+
+    return 0;
 
 }
 
