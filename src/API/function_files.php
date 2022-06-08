@@ -81,10 +81,10 @@ function getAllAllowedFiles($request, $response, $args)
     $user = $_SESSION['id'];
     $tags = $request->getParam("tag");
     $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT(";
-    $sql .="SELECT fichiers.* FROM fichiers,assigner ";
+    $sql .="SELECT fichiers.* FROM fichiers ";
     if($tags != null ){
-        echo 'test';
-        $sql .= "WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
+
+        $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
         for($i = 0; $i < count($tags); $i++){
             $sql .= $tags[$i];
             if($i != count($tags) - 1){
