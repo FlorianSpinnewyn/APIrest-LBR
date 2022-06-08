@@ -252,7 +252,7 @@ function addFile( $request,$response,  $args) {
         return $res;
     }
 
-    $nom=$request->getParam("fileName");
+    $nom=$_FILES['file']['tmp_name'];
     $idUser=$_SESSION['id'];
     $auteur=$request->getParam("author");
     $taille=$_FILES['file']['size'];
@@ -260,6 +260,8 @@ function addFile( $request,$response,  $args) {
     $type='.'.explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
     $date = $request->getParam("date");
     $str = $_FILES['file']['type']  . $type;
+
+
     if($_FILES ['file']['error'] > 0){
         $error = array(
             "message"=> "Erreur lors du transfert"
@@ -276,8 +278,19 @@ function addFile( $request,$response,  $args) {
         $response->getBody()->write(json_encode($error));
         return $response
             ->withHeader('content-type', 'application/json')
+            ->withStatus(413);
+    }
+    //check if the files are images or videos
+    if(!($_FILES['file']['type'] == "image/jpeg" || $_FILES['file']['type'] == "image/png" || $_FILES['file']['type'] == "image/gif" || $_FILES['file']['type'] == "video/mp4" || $_FILES['file']['type'] == "video/avi" || $_FILES['file']['type'] == "video/mpeg" || $_FILES['file']['type'] == "video/quicktime"|| $_FILES['file']['type'] == "video/mov")){
+        $error = array(
+            "message"=> "Type de fichier non autorisé"
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response
+            ->withHeader('content-type', 'application/json')
             ->withStatus(400);
     }
+
     $file = $_FILES['file'];
 
 
@@ -483,19 +496,3 @@ function deleteUserInFiles($user){
     }
 }
 
-
-
-function uploadFile( $request,$response,  $args) {
-
-    move_uploaded_file($_FILES["file"]["tmp_name"], "../files/".$_FILES["file"]["name"]);
-    foreach ($_FILES["file"]["error"] as $key => $error) {
-        if ($error == UPLOAD_ERR_OK) {
-            $tmp_name = $_FILES["file"]["tmp_name"][$key];
-            // basename() may prevent filesystem traversal attacks;
-            // further validation/sanitation of the filename may be appropriate
-            $name = basename($_FILES["file"]["name"][$key]);
-            move_uploaded_file($tmp_name, "../files/$name");
-        }
-    }
-
-}
