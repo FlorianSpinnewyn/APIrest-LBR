@@ -92,7 +92,8 @@ function addTag( $request,$response,  $args) {
         $result=$stmt->execute();
 
         $DB = null;
-        $response->getBody()->write(json_encode($result));
+        $response->getBody()->write(json_encode($conn->lastInsertId()));
+
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
