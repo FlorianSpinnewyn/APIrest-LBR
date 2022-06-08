@@ -32,7 +32,6 @@ function getAllFiles($request,$response,$args) {
 
     $sql ="SELECT fichiers.* FROM fichiers ";
     if($tags != null ){
-        echo 'test';
         $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
         for($i = 0; $i < count($tags); $i++){
             $sql .= $tags[$i];
