@@ -82,6 +82,7 @@ function addUser( $request,$response,  $args) {
         $response->getBody()->write(json_encode($result));
 
         $id_user = $conn->lastInsertId();
+
         addAllowedTagToUser2($id_user, $request,$response,  $args);
         $DB = null;
         return $response
@@ -106,12 +107,30 @@ function updateUser($request,$response,$args){
         return $res;
     }
     $user =$args['user'];
-    $selection=$request->getParam("selection");
 
-    $modif = $request->getParam("modif");
+    $sql ="UPDATE `utilisateurs` SET";
+     if($request->getParam("mail")){
+        $sql.=" `mail` = '".$request->getParam("mail")."',";
+     }
+     if($request->getParam("name_surname")){
+        $sql.=" `nom_prenom` = '".$request->getParam("name_surname")."',";
+     }
+     if($request->getParam("password")){
+         $sql.=" `mdp` = '".$request->getParam("password")."',";
+     }
+     if($request->getParam("description")){
+         $sql.=" `descriptif` = '".$request->getParam("description")."',";
+     }
+     if($request->getParam("role")){
+         $sql.=" `role` = '".$request->getParam("role")."',";
+     }
+     if($request->getParam("is_pwd_final")){
+         $sql.=" `mdpFinal` = '".$request->getParam("is_pwd_final")."',";
+     }
 
 
-    $sql ="UPDATE `utilisateurs` SET `$selection`='$modif' WHERE `id_user`=$user";
+
+    $sql .= "WHERE `id_user`=$user";
 
     try {
         $DB = new DB();
@@ -184,7 +203,9 @@ function addAllowedTagToUser($request,$response,$args){
 
     $user = $args["user"];
     $tags = $request->getParam("tags");
-
+    if($tags == null){
+        return 0;
+    }
     for($i = 0;$i < count($tags);$i++) {
         $sql = "INSERT INTO autoriser (id_tag,id_user) VALUE ($tags[$i],$user)";
 
@@ -211,12 +232,77 @@ function addAllowedTagToUser($request,$response,$args){
 
 }
 
+function getAllowedTags($request,$response,$args){
+    $res = isAdmin($request,$response,  $args);
+    if($res ){
+        return $res;
+    }
+
+    $user = $args["user"];
+    $sql = "SELECT * FROM tags WHERE id_tag IN(SELECT id_tag FROM autoriser WHERE id_user = $user)";
+
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+        $stmt = $conn->prepare($sql);
+
+        $stmt->execute();
+        $tags = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $DB = null;
+        $response->getBody()->write(json_encode($tags));
+        return $response->withHeader('content-type', 'application/json')->withStatus(200);
+    } catch (PDOException $e) {
+        $error = array(
+            "message" => $e->getMessage()
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response->withHeader('content-type', 'application/json')->withStatus(400);
+    }
+}
+
+function removeAllowedTagToUser($request,$response,$args)
+{
+    $res = isAdmin($request, $response, $args);
+    if ($res) {
+        return $res;
+    }
+
+    $user = $args["user"];
+    $tags = $request->getParam("tags");
+    if ($tags == null) {
+        return 0;
+    }
+    for ($i = 0; $i < count($tags); $i++) {
+        $sql = "DELETE FROM autoriser WHERE id_tag = $tags[$i] AND id_user = $user";
+
+        try {
+            $DB = new DB();
+            $conn = $DB->connect();
+            $stmt = $conn->prepare($sql);
+
+            $result = $stmt->execute();
+
+            $DB = null;
+            $response->getBody()->write(json_encode($result));
+            //return $response->withHeader('content-type', 'application/json')->withStatus(200);
+        } catch (PDOException $e) {
+            $error = array(
+                "message" => $e->getMessage()
+            );
+            $response->getBody()->write(json_encode($error));
+            return $response->withHeader('content-type', 'application/json')->withStatus(400);
+        }
+    }
+}
+
 
 function addAllowedTagToUser2($id,$request,$response,$args){
 
 
     $tags = $request->getParam("tags");
-
+    if($tags == null){
+        return 0;
+    }
     for($i = 0;$i < count($tags);$i++) {
         $sql = "INSERT INTO autoriser (id_tag,id_user) VALUE ($tags[$i],$id)";
 
