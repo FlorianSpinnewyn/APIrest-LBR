@@ -79,6 +79,9 @@ return function (App $app) {
         return addUser($request,$response, $args);
     });
 
+    $app->get('/users/{user}/tags', function (Request $request, Response $response, array $args) use ($container) {
+        return getAssignedTags($request,$response, $args);
+    });
     $app->post('/users/{user}/tags', function (Request $request, Response $response, array $args) use ($container) {
         return addAllowedTagToUser($request,$response, $args);
     });

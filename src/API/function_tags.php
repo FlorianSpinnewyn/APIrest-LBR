@@ -40,7 +40,7 @@ function getAllTags($request,$response,$args){
 }
 
 
-function getAllowedTags($request, $response, $args)
+function getAssignedTags($request, $response, $args)
 {
     $sql = "(SELECT id_tag,nom_tag,id_user,nom_categorie FROM tags where id_user = " . $_SESSION['id']. ")UNION(SELECT id_tag,nom_tag,id_user,nom_categorie FROM tags where id_tag in(select id_tag from autoriser where id_user = " . $_SESSION['id'] . "))";
 
