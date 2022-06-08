@@ -31,7 +31,7 @@ function getAllFiles($request,$response,$args) {
     }
 
     $sql ="SELECT fichiers.* FROM fichiers,assigner ";
-    if(count($tags) > 0){
+    if($tags != null ){
         echo 'test';
         $sql .= "WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
         for($i = 0; $i < count($tags); $i++){
@@ -81,7 +81,7 @@ function getAllAllowedFiles($request, $response, $args)
     $tags = $request->getParam("tag");
     $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT(";
     $sql .="SELECT fichiers.* FROM fichiers,assigner ";
-    if(count($tags) > 0){
+    if($tags != null ){
         echo 'test';
         $sql .= "WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
         for($i = 0; $i < count($tags); $i++){
@@ -95,7 +95,7 @@ function getAllAllowedFiles($request, $response, $args)
 
 
 
-    if($request->getQueryParam('limit')){
+    if($request->getQueryParam('limit')!= null AND $request->getQueryParam('offset') != null){
         $sql .= " LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
@@ -141,7 +141,7 @@ function getFile($request,$response, $args){
         $file = $stmt->fetch(PDO::FETCH_OBJ);
 
         $db = null;
-        $response->getBody()->write(json_encode($file));
+
         $filename = $file->id_file.'.'.explode('.',$file->type)[1];
 
         $path = "../files/";
@@ -149,18 +149,23 @@ function getFile($request,$response, $args){
 
 
         if(!empty($filename)){
-            // Check file is exists on given path.
-            if(file_exists($download_file))
-            {
-                header('Content-Disposition: attachment; filename=' . $filename);
-                header('Content-Type: '.explode('.',$file->type)[0].'; charset=UTF-8"');
-                readfile($download_file);
-                exit;
-            }
-            else
-            {
-                echo 'File does not exists on given path';
-            }
+                // Check file is exists on given path.
+                if(file_exists($download_file))
+                {
+                    echo "test";
+                    header('Content-Disposition: attachment; filename=' . $filename);
+
+                    readfile($download_file);
+                    return $response
+                        ->withHeader('content-type', explode('.',$file->type)[0].'; charset=UTF-8"')
+                        ->withStatus(200);
+                }
+                else
+                {
+                    echo 'File does not exists on given path';
+                    return $response
+                        ->withStatus(404);
+                }
         }
         return $response
             ->withStatus(200);
@@ -180,8 +185,8 @@ function getAllowedFile($request,$response, $args){
 
 
     $id_file = $args['file'];
-        $allowedFiles = (getAllAllowedFiles($request,$response,$args));
-        if(!$allowedFiles){
+    $allowedFiles = (getAllAllowedFiles($request,$response,$args));
+    if(!$allowedFiles){
         $error = array(
             "message"=> "Aucun fichier trouve/erreur de parametres"
         );
@@ -190,16 +195,35 @@ function getAllowedFile($request,$response, $args){
             ->withHeader('content-type', 'application/json')
             ->withStatus(404);
     }
-        for($i = 0; $i < count($allowedFiles); $i++){
-            echo $allowedFiles[$i]->id_file;
-            if($allowedFiles[$i]->id_file == $id_file){
-                $file = $allowedFiles[$i];
-                $response->getBody()->write(json_encode($file));
+    for($i = 0; $i < count($allowedFiles); $i++){
+        if($allowedFiles[$i]->id_file == $id_file){
+            $file = $allowedFiles[$i];
+            $filename = $file->id_file.'.'.explode('.',$file->type)[1];
+
+            $path = "../files/";
+            $download_file =  $path.$filename;
+
+
+            if(!empty($filename)){
+                // Check file is exists on given path.
+                if(file_exists($download_file))
+                    {
+                        header('Content-Disposition: attachment; filename=' . $filename);
+                        header('Content-Type: '.explode('.',$file->type)[0].'; charset=UTF-8"');
+                        readfile($download_file);
+
+                    }
+
+                }
+
+
                 return $response
-                    ->withHeader('content-type', 'application/json')
                     ->withStatus(200);
 
             }
+
+
+
         }
         $response->getBody()->write("file not found");
         return $response
