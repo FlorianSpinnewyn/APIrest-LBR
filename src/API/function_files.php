@@ -30,10 +30,10 @@ function getAllFiles($request,$response,$args) {
         }
     }
 
-    $sql ="SELECT fichiers.* FROM fichiers,assigner ";
+    $sql ="SELECT fichiers.* FROM fichiers ";
     if($tags != null ){
         echo 'test';
-        $sql .= "WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
+        $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
         for($i = 0; $i < count($tags); $i++){
             $sql .= $tags[$i];
             if($i != count($tags) - 1){
@@ -42,6 +42,7 @@ function getAllFiles($request,$response,$args) {
         }
         $sql .= ")";
     }
+    echo $sql;
 
 
     if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
@@ -142,6 +143,7 @@ function getFile($request,$response, $args){
 
         $db = null;
 
+
         $filename = $file->id_file.'.'.explode('.',$file->type)[1];
 
         $path = "../files/";
@@ -149,26 +151,32 @@ function getFile($request,$response, $args){
 
 
         if(!empty($filename)){
-                // Check file is exists on given path.
-                if(file_exists($download_file))
-                {
-                    echo "test";
-                    header('Content-Disposition: attachment; filename=' . $filename);
+            // Check file is exists on given path.
+            if(file_exists($download_file))
+            {
+                // Get file size.
+                $filesize = filesize($download_file);
+                //get file type
 
-                    readfile($download_file);
-                    return $response
-                        ->withHeader('content-type', explode('.',$file->type)[0].'; charset=UTF-8"')
-                        ->withStatus(200);
-                }
-                else
-                {
-                    echo 'File does not exists on given path';
-                    return $response
-                        ->withStatus(404);
-                }
+                // Download file.
+                header("Content-Type: ".explode('.',$file->type)[0]);
+                header("Content-Length: " . $filesize);
+                header("Content-Disposition: attachment; filename=$filename");
+                header("Content-Transfer-Encoding: binary");
+                readfile($download_file);
+
+                exit;
+            }
+            else
+            {
+                echo 'File does not exists on given path';
+                return $response
+                    ->withHeader('content-type', 'application/json')
+                    ->withStatus(404);
+            }
+
         }
-        return $response
-            ->withStatus(200);
+
     }catch (PDOException $e) {
         $error = array(
             "message"=> $e->getMessage()
@@ -196,34 +204,40 @@ function getAllowedFile($request,$response, $args){
             ->withStatus(404);
     }
     for($i = 0; $i < count($allowedFiles); $i++){
-        if($allowedFiles[$i]->id_file == $id_file){
+        if($allowedFiles[$i]->id_file == $id_file) {
             $file = $allowedFiles[$i];
-            $filename = $file->id_file.'.'.explode('.',$file->type)[1];
+            $filename = $file->id_file . '.' . explode('.', $file->type)[1];
 
             $path = "../files/";
-            $download_file =  $path.$filename;
+            $download_file = $path . $filename;
 
 
-            if(!empty($filename)){
+            if (!empty($filename)) {
                 // Check file is exists on given path.
-                if(file_exists($download_file))
-                    {
-                        header('Content-Disposition: attachment; filename=' . $filename);
-                        header('Content-Type: '.explode('.',$file->type)[0].'; charset=UTF-8"');
-                        readfile($download_file);
+                if (file_exists($download_file)) {
+                    // Get file size.
+                    $filesize = filesize($download_file);
+                    //get file type
 
-                    }
+                    // Download file.
+                    header("Content-Type: " . explode('.', $file->type)[0]);
+                    header("Content-Length: " . $filesize);
+                    header("Content-Disposition: attachment; filename=$filename");
+                    header("Content-Transfer-Encoding: binary");
+                    readfile($download_file);
 
+                    exit;
+                } else {
+                    echo 'File does not exists on given path';
+                    return $response
+                        ->withHeader('content-type', 'application/json')
+                        ->withStatus(404);
                 }
-
-
-                return $response
-                    ->withStatus(200);
 
             }
 
 
-
+        }
         }
         $response->getBody()->write("file not found");
         return $response
