@@ -204,7 +204,7 @@ function checkIfOwnedFile($request,$response,$args){
                 ->withStatus(400);
         }
     }
-    return 1;
+    return 0;
 }
 
 function checkIfOwnedTag($request,$response,$args){
@@ -247,7 +247,7 @@ function checkIfOwnedTag($request,$response,$args){
                 ->withStatus(400);
         }
     }
-    return 1;
+    return 0;
 }
 
 

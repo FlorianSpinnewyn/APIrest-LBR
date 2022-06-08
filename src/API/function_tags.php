@@ -116,6 +116,7 @@ function deleteTag( $request,$response,  $args) {
     }
 
     $res2 = checkIfOwnedTag($request,$response,$args);
+    echo $res2;
     if($res2 ){
         return $res2;
     }
