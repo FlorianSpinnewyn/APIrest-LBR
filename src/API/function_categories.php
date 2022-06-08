@@ -132,7 +132,24 @@ function deleteCategorie( $request,$response,  $args) {
     if($res ){
         return $res;
     }
-
+    if(!isset($args["category"])){
+        $error = array(
+            "message"=> "category not found"
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(404);
+    }
+    if($args["category"] == "autre"){
+        $error = array(
+            "message"=> "category autre can't be deleted"
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(400);
+    }
     $categoryDel = $args["category"];
 
 

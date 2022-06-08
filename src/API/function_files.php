@@ -32,7 +32,6 @@ function getAllFiles($request,$response,$args) {
 
     $sql ="SELECT fichiers.* FROM fichiers ";
     if($tags != null ){
-
         $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
         for($i = 0; $i < count($tags); $i++){
             $sql .= $tags[$i];
@@ -253,7 +252,7 @@ function addFile( $request,$response,  $args) {
         return $res;
     }
 
-    $nom=$request->getParam("fileName");
+    $nom=$_FILES['file']['tmp_name'];
     $idUser=$_SESSION['id'];
     $auteur=$request->getParam("author");
     $taille=$_FILES['file']['size'];
@@ -261,6 +260,8 @@ function addFile( $request,$response,  $args) {
     $type='.'.explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
     $date = $request->getParam("date");
     $str = $_FILES['file']['type']  . $type;
+
+
     if($_FILES ['file']['error'] > 0){
         $error = array(
             "message"=> "Erreur lors du transfert"
@@ -277,9 +278,10 @@ function addFile( $request,$response,  $args) {
         $response->getBody()->write(json_encode($error));
         return $response
             ->withHeader('content-type', 'application/json')
-            ->withStatus(400);
+            ->withStatus(413);
     }
-    if(!in_array($str,$_SESSION['allowedFiles'])){
+    //check if the files are images or videos
+    if(!($_FILES['file']['type'] == "image/jpeg" || $_FILES['file']['type'] == "image/png" || $_FILES['file']['type'] == "image/gif" || $_FILES['file']['type'] == "video/mp4" || $_FILES['file']['type'] == "video/avi" || $_FILES['file']['type'] == "video/mpeg" || $_FILES['file']['type'] == "video/quicktime"|| $_FILES['file']['type'] == "video/mov")){
         $error = array(
             "message"=> "Type de fichier non autorisé"
         );
@@ -288,6 +290,8 @@ function addFile( $request,$response,  $args) {
             ->withHeader('content-type', 'application/json')
             ->withStatus(400);
     }
+
+    $file = $_FILES['file'];
 
 
 
@@ -491,5 +495,4 @@ function deleteUserInFiles($user){
         );
     }
 }
-
 

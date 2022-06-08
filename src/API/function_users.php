@@ -255,3 +255,14 @@ function deleteTagsInUsers($tag){
     }catch (PDOException $e) {
     }
 }
+
+function getYourData($request,$response,$args)
+{
+    $res = isSession($request, $response, $args);
+    if ($res) {
+        return $res;
+    }
+    $response->getBody()->write(json_encode($_SESSION));
+
+    return $response->withHeader('content-type', 'application/json')->withStatus(200);
+}

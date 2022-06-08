@@ -63,6 +63,10 @@ return function (App $app) {
 
     /**--USERS--**/
 
+    $app->get('/me', function (Request $request, Response $response, array $args) use ($container) {
+        return getYourData($request,$response, $args);
+    });
+
     $app->get('/users', function (Request $request, Response $response, array $args) use ($container) {
         return getUsersAll($request,$response,$args);
     });
@@ -81,6 +85,8 @@ return function (App $app) {
     $app->delete('/users/{user}/tags', function (Request $request, Response $response, array $args) use ($container) {
         return removeAllowedTagToUser($request,$response, $args);
     });
+
+
 
 
     $app->put('/users/{user}', function (Request $request, Response $response, array $args) use ($container) {
