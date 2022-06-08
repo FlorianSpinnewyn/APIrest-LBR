@@ -42,7 +42,7 @@ function getAllFiles($request,$response,$args) {
         }
         $sql .= ")";
     }
-    echo $sql;
+
 
 
     if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
