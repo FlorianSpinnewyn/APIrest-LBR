@@ -32,7 +32,7 @@ function getAllFiles($request,$response,$args) {
 
     $sql ="SELECT fichiers.* FROM fichiers ";
     if($tags != null ){
-        echo 'test';
+
         $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
         for($i = 0; $i < count($tags); $i++){
             $sql .= $tags[$i];
@@ -42,7 +42,7 @@ function getAllFiles($request,$response,$args) {
         }
         $sql .= ")";
     }
-    echo $sql;
+
 
 
     if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
@@ -280,7 +280,15 @@ function addFile( $request,$response,  $args) {
             ->withHeader('content-type', 'application/json')
             ->withStatus(400);
     }
-    $file = $_FILES['file'];
+    if(!in_array($str,$_SESSION['allowedFiles'])){
+        $error = array(
+            "message"=> "Type de fichier non autorisé"
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(400);
+    }
 
 
 
@@ -486,18 +494,3 @@ function deleteUserInFiles($user){
 }
 
 
-
-function uploadFile( $request,$response,  $args) {
-
-    move_uploaded_file($_FILES["file"]["tmp_name"], "../files/".$_FILES["file"]["name"]);
-    foreach ($_FILES["file"]["error"] as $key => $error) {
-        if ($error == UPLOAD_ERR_OK) {
-            $tmp_name = $_FILES["file"]["tmp_name"][$key];
-            // basename() may prevent filesystem traversal attacks;
-            // further validation/sanitation of the filename may be appropriate
-            $name = basename($_FILES["file"]["name"][$key]);
-            move_uploaded_file($tmp_name, "../files/$name");
-        }
-    }
-
-}
