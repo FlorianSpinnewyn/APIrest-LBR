@@ -108,7 +108,9 @@ function getAllFiles($request,$response,$args) {
             }
 
         }
-
+        else{
+            $sql = "SELECT * FROM fichiers";
+        }
 
     }
 
