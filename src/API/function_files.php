@@ -8,7 +8,7 @@ function getAllFiles($request,$response,$args) {
     if($res){
         return $res;
     }
-    $tags = $request->getParam("tag");
+    $tags = $request->getQueryParam("tag");
 
 
     if($_SESSION['role'] == 0){
@@ -30,18 +30,89 @@ function getAllFiles($request,$response,$args) {
         }
     }
 
-    $sql ="SELECT fichiers.* FROM fichiers ";
-    if($tags != null ){
-        $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
-        for($i = 0; $i < count($tags); $i++){
-            $sql .= $tags[$i];
-            if($i != count($tags) - 1){
-                $sql .= ",";
-            }
-        }
-        $sql .= ")";
-    }
 
+    if($request->getQueryParam("union")=="true") {
+        $sql = "SELECT fichiers.* FROM fichiers ";
+
+        if ($tags != null) {
+            $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
+            for ($i = 0; $i < count($tags); $i++) {
+                $sql .= $tags[$i];
+                if ($i != count($tags) - 1) {
+                    $sql .= ",";
+                }
+            }
+            $sql .= ") GROUP BY fichiers.id_file";
+        }
+    }
+    else {
+        if ($tags != null) {
+            $sql ="SELECT nom_categorie FROM categories";
+
+            try {
+                $DB = new DB();
+                $conn = $DB->connect();
+
+                $stmt = $conn->query($sql);
+                $categories = $stmt->fetchAll(PDO::FETCH_OBJ);
+                $sql = "SELECT * FROM tags ";
+                $stmt = $conn->query($sql);
+                $tagsList = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+
+                if(is_countable($categories)){
+                    $sql = "";
+                    for($i = 0; $i < count($categories); $i++){
+                        $elements = false;
+                        for($j = 0; $j < count($tagsList); $j++){
+                            if($tagsList[$j]->nom_categorie == $categories[$i]->nom_categorie && in_array($tagsList[$j]->id_tag,$tags)){
+                                $elements = true;
+                            }
+                        }
+                        if (!$elements)
+                            continue;
+
+                        $sql .= "(SELECT fichiers.* FROM fichiers,assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
+                        $sql .= "Select id_tag from tags where nom_categorie = '" . $categories[$i]->nom_categorie . "' AND id_tag IN (0,";
+                        for($j = 0; $j < count($tagsList); $j++){
+                            if($tagsList[$j]->nom_categorie == $categories[$i]->nom_categorie && in_array($tagsList[$j]->id_tag,$tags)){
+                                $sql .= $tagsList[$j]->id_tag;
+                                if ($j != count($tagsList) - 1) {
+                                    $sql .= ",";
+                                }
+                            }
+                        }
+                        if(str_ends_with($sql, ",")){
+                            $sql = substr_replace($sql ,"", -1);
+                        }
+
+                        $sql .= ")))";
+                        if($i != count($categories) - 1){
+                            $sql .= " INTERSECT ";
+
+                        }
+
+
+                    }
+                }
+
+                if(str_ends_with($sql, "INTERSECT ")){
+                    $sql = substr_replace($sql ,"", -10);
+                }
+
+
+
+            }
+            catch (PDOException $e) {
+                $error = array(
+                    "message" => $e->getMessage()
+                );
+            }
+
+        }
+
+
+    }
 
 
     if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
@@ -78,7 +149,7 @@ function getAllFiles($request,$response,$args) {
 function getAllAllowedFiles($request, $response, $args)
 {
     $user = $_SESSION['id'];
-    $tags = $request->getParam("tag");
+    $tags = $request->getQueryParam("tag");
     $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT(";
     if($tags != null ){
 

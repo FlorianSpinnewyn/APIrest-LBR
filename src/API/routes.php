@@ -89,9 +89,6 @@ return function (App $app) {
         return removeAllowedTagToUser($request,$response, $args);
     });
 
-
-
-
     $app->put('/users/{user}', function (Request $request, Response $response, array $args) use ($container) {
         return updateUser($request,$response, $args);
     });

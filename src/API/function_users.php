@@ -84,6 +84,13 @@ function addUser( $request,$response,  $args) {
         $id_user = $conn->lastInsertId();
 
         addAllowedTagToUser2($id_user, $request,$response,  $args);
+        $headers = $headers = array(
+            'From' => 'drivelbr@test-mail.lesbriquesrouges.fr',
+            'X-Mailer' => 'PHP/' . phpversion()
+        );;
+
+        mail("elliott.vanwormhoudt@student.junia.com","Inscription","Vous venez de vous inscrire. Votre identifiant est $mail et votre mot de passe est $mdp. Vous pouvez vous connecter sur le site en utilisant ces identifiants.<a href ='http://www.example.com'>Veuillez confirmer votre email</a> ",$headers);
+
         $DB = null;
         return $response
             ->withHeader('content-type', 'application/json')
