@@ -80,13 +80,7 @@ function addUser( $request,$response,  $args) {
         $stmt = $conn->query($sqlVerif);
         $file = $stmt->fetch(PDO::FETCH_OBJ);
         if($file) {
-            $error = array(
-                "message" => "Cet utilisateur existe déjà"
-            );
-            $response->getBody()->write(json_encode($error));
-            return $response
-                ->withHeader('content-type', 'application/json')
-                ->withStatus(400);
+            return $response->withStatus(400)->withHeader('content-type', 'application/json')->getBody()->write("Mail deja utilisé");
         }
 
 
@@ -111,7 +105,7 @@ function addUser( $request,$response,  $args) {
         $DB = null;
         return $response
             ->withHeader('content-type', 'application/json')
-            ->withHeader('location', 'http://localhost:8080/api/users/'.$id_user)
+            ->withHeader('location', '/api/users/'.$id_user)
             ->withStatus(201);
     }catch (PDOException $e) {
         $error = array(
@@ -119,9 +113,7 @@ function addUser( $request,$response,  $args) {
         );
     }
     $response->getBody()->write(json_encode($error));
-    return $response
-        ->withHeader('content-type', 'application/json')
-        ->withStatus(400);
+
 }
 
 
@@ -189,10 +181,7 @@ function deleteUser( $request,$response,  $args) {
         return $res;
     }
 
-
     $userDel = $args["user"];
-
-
     $sql ="DELETE from utilisateurs WHERE id_user = $userDel";
 
     try {
@@ -349,6 +338,7 @@ function addAllowedTagToUser2($id,$request,$response,$args){
             );
         }
         $response->getBody()->write(json_encode($error));
+        return $response->withHeader('content-type', 'application/json')->withStatus(400);
         //return $response->withHeader('content-type', 'application/json')->withStatus(400);
     }
     return true;
