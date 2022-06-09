@@ -64,6 +64,8 @@ function addUser( $request,$response,  $args) {
     $mail=$request->getParam("mail");
     $nom_prenom=$request->getParam("name_surname");
     $mdp=$request->getParam("password");
+    $mdp = password_hash($mdp, PASSWORD_DEFAULT);
+
     $descriptif=$request->getParam("description");
     $role=$request->getParam("role");
     $mdpFinal=$request->getParam("is_pwd_final");
@@ -89,7 +91,7 @@ function addUser( $request,$response,  $args) {
             'X-Mailer' => 'PHP/' . phpversion()
         );;
 
-        mail("elliott.vanwormhoudt@student.junia.com","Inscription","Vous venez de vous inscrire. Votre identifiant est $mail et votre mot de passe est $mdp. Vous pouvez vous connecter sur le site en utilisant ces identifiants.<a href ='http://www.example.com'>Veuillez confirmer votre email</a> ",$headers);
+       // mail("elliott.vanwormhoudt@student.junia.com","Inscription","Vous venez de vous inscrire. Votre identifiant est $mail et votre mot de passe est $mdp. Vous pouvez vous connecter sur le site en utilisant ces identifiants.<a href ='http://www.example.com'>Veuillez confirmer votre email</a> ",$headers);
 
         $DB = null;
         return $response
@@ -134,7 +136,9 @@ function updateUser($request,$response,$args){
      if($request->getParam("is_pwd_final")){
          $sql.=" `mdpFinal` = '".$request->getParam("is_pwd_final")."',";
      }
-
+     if($sql[strlen($sql)-1]==","){
+         $sql=substr($sql,0,strlen($sql)-1);
+     }
 
 
     $sql .= "WHERE `id_user`=$user";
