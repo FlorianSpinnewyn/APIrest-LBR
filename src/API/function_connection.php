@@ -8,33 +8,42 @@ function login($request,$response,$args){
     $password = $request->getParam("password");
 
 
-    $sql = "SELECT * FROM utilisateurs WHERE mail = '$mail' AND mdp = '$password'";
+    $sql = "SELECT * FROM utilisateurs";
     try{
         $db = new db();
         $db = $db->connect();
         $stmt = $db->query($sql);
-        $user = $stmt->fetch(PDO::FETCH_OBJ);
+        $user = $stmt->fetchAll(PDO::FETCH_OBJ);
         $db = null;
 
-        if($user) {
-            session_start([
-                'use_only_cookies' => 1,
-                'cookie_lifetime' => 0,
-                'cookie_secure' => 0,
-                'cookie_httponly' => 1
-            ]);
+        $userFound = false;
+        for($i=0;$i<count($user);$i++){
+            if($user[$i]->mail == $mail ){
+                $userFound = true;
+                if(password_verify($password,$user[$i]->mdp)) {
+                    session_start([
+                        'use_only_cookies' => 1,
+                        'cookie_lifetime' => 0,
+                        'cookie_secure' => 0,
+                        'cookie_httponly' => 1
+                    ]);
 
-            $_SESSION['role'] = $user->role;
-            $_SESSION['id'] = $user->id_user;
-            return $response->withStatus(200)->getBody()->write("utilisateur connecte");
+                    $_SESSION['role'] = $user[$i]->role;
+                    $_SESSION['id'] = $user[$i]->id_user;
+                    return $response->withStatus(200)->getBody()->write("utilisateur connecte");
+                }
+            }
         }
-        else{
-            $response->getBody()->write("Mauvais identifiants");
+        if(!$userFound){
+            return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
         }
+        $response->getBody()->write("Mauvais identifiants");
+        return $response->withStatus(400);
+
+
     }catch(PDOException $e){
         echo '{"error": {"text": '.$e->getMessage().'}}';
     }
-    return $response->withStatus(401);
 }
 
 function logout($request,$response,$args){
@@ -80,7 +89,7 @@ function changePassword($request,$response,$args)
 
 
     $password = $request->getParam("password");
-
+    $password = password_hash($password, PASSWORD_BCRYPT);
     $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$_SESSION[id]'";
     try{
         $db = new db();

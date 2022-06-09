@@ -64,7 +64,7 @@ function addUser( $request,$response,  $args) {
     $mail=$request->getParam("mail");
     $nom_prenom=$request->getParam("name_surname");
     $mdp=$request->getParam("password");
-    $mdp = password_hash($mdp, PASSWORD_DEFAULT);
+    $mdp = password_hash($mdp, PASSWORD_BCRYPT);
 
     $descriptif=$request->getParam("description");
     $role=$request->getParam("role");
@@ -74,7 +74,22 @@ function addUser( $request,$response,  $args) {
 
     try {
         $DB = new DB();
+        $sqlVerif = "SELECT * FROM utilisateurs WHERE mail = '$mail'";
+
         $conn = $DB->connect();
+        $stmt = $conn->query($sqlVerif);
+        $file = $stmt->fetch(PDO::FETCH_OBJ);
+        if($file) {
+            $error = array(
+                "message" => "Cet utilisateur existe déjà"
+            );
+            $response->getBody()->write(json_encode($error));
+            return $response
+                ->withHeader('content-type', 'application/json')
+                ->withStatus(400);
+        }
+
+
         $stmt = $conn->prepare($sql);
 
 
@@ -86,7 +101,7 @@ function addUser( $request,$response,  $args) {
         $id_user = $conn->lastInsertId();
 
         addAllowedTagToUser2($id_user, $request,$response,  $args);
-        $headers = $headers = array(
+        $headers = array(
             'From' => 'drivelbr@test-mail.lesbriquesrouges.fr',
             'X-Mailer' => 'PHP/' . phpversion()
         );;
@@ -125,7 +140,8 @@ function updateUser($request,$response,$args){
         $sql.=" `nom_prenom` = '".$request->getParam("name_surname")."',";
      }
      if($request->getParam("password")){
-         $sql.=" `mdp` = '".$request->getParam("password")."',";
+         $password = password_hash($request->getParam("password"), PASSWORD_BCRYPT);
+         $sql.=" `mdp` = '".$password."',";
      }
      if($request->getParam("description")){
          $sql.=" `descriptif` = '".$request->getParam("description")."',";

@@ -324,8 +324,6 @@ function getFile($request,$response, $args){
 
 
 function getAllowedFile($request,$response, $args){
-
-
     $id_file = $args['file'];
     $allowedFiles = (getAllAllowedFiles($request,$response,$args));
     if(!$allowedFiles){
