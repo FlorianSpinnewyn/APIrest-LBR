@@ -123,6 +123,23 @@ function updateUser($request,$response,$args){
         return $res;
     }
     $user =$args['user'];
+    if($request->getParam("Tag")){
+        $sql ="DELETE FROM autoriser WHERE id_user=$user";
+        try {
+            $DB = new DB();
+            $conn = $DB->connect();
+
+            $stmt = $conn->prepare($sql);
+            $result = $stmt->execute();
+            $DB = null;
+
+        }catch (PDOException $e) {
+        }
+        addAllowedTagToUser2($args['user'], $request,$response,  $args);
+    }
+
+
+
 
     $sql ="UPDATE `utilisateurs` SET";
      if($request->getParam("mail")){
@@ -149,6 +166,7 @@ function updateUser($request,$response,$args){
      }
 
 
+
     $sql .= "WHERE `id_user`=$user";
 
     try {
@@ -160,6 +178,7 @@ function updateUser($request,$response,$args){
         $result=$stmt->execute();
         $DB = null;
         $response->getBody()->write(json_encode($files));
+
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);

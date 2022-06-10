@@ -9,8 +9,8 @@ require __DIR__ . '/function_connection.php';
 require __DIR__ . '/function_users.php';
 require __DIR__ . '/function_files.php';
 require __DIR__ . '/function_tags.php';
+require __DIR__ . '/VideoStream.php';
 require __DIR__ . '/../dataBaseAcces.php';
-
 
 
 
@@ -130,6 +130,11 @@ return function (App $app) {
     });
     $app->delete('/categories/{category}', function (Request $request, Response $response, array $args) use ($container) {
         return deleteCategorie($request,$response, $args);
+    });
+
+
+    $app->get('/stream/{file}', function (Request $request, Response $response, array $args) use ($container) {
+        return stream($request,$response, $args);
     });
 
 
