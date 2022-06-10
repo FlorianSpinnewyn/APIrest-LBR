@@ -395,7 +395,7 @@ function addFile( $request,$response,  $args) {
     $date = $request->getParam("date");
     $str = $_FILES['file']['type']  . $type;
 
-
+    echo $str;
     if($_FILES ['file']['error'] > 0){
         $error = array(
             "message"=> "Erreur lors du transfert"
@@ -629,4 +629,24 @@ function deleteUserInFiles($user){
         );
     }
 }
+
+
+
+
+function stream($request,$response, $args)
+{
+    $res = isSession($request,$response,$args);
+    if($res ){
+        return $res;
+    }
+
+    $file = $args['file'];
+    $file = "../files/".$file.'.mp4';
+
+
+    $stream = new VideoStream($file);
+    $stream->start();
+
+}
+
 

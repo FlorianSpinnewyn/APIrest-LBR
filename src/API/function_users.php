@@ -123,22 +123,23 @@ function updateUser($request,$response,$args){
         return $res;
     }
     $user =$args['user'];
-    if($request->getParam("Tag")){
+
+    if($request->getParam("tags")){
         $sql ="DELETE FROM autoriser WHERE id_user=$user";
         try {
             $DB = new DB();
             $conn = $DB->connect();
-
             $stmt = $conn->prepare($sql);
-            $result = $stmt->execute();
+            $files = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $result=$stmt->execute();
             $DB = null;
-
         }catch (PDOException $e) {
+
         }
         addAllowedTagToUser2($args['user'], $request,$response,  $args);
+
     }
-
-
+;
 
 
     $sql ="UPDATE `utilisateurs` SET";
@@ -241,6 +242,7 @@ function addAllowedTagToUser($request,$response,$args){
     if($tags == null){
         return 0;
     }
+
     for($i = 0;$i < count($tags);$i++) {
         $sql = "INSERT INTO autoriser (id_tag,id_user) VALUE ($tags[$i],$user)";
 
@@ -338,8 +340,9 @@ function addAllowedTagToUser2($id,$request,$response,$args){
     if($tags == null){
         return 0;
     }
+
     for($i = 0;$i < count($tags);$i++) {
-        $sql = "INSERT INTO autoriser (id_tag,id_user) VALUE ($tags[$i],$id)";
+        $sql = "INSERT INTO autoriser (id_tag,id_user) VALUES ($tags[$i],$id)";
 
         try {
             $DB = new DB();
@@ -349,18 +352,18 @@ function addAllowedTagToUser2($id,$request,$response,$args){
             $result = $stmt->execute();
 
             $DB = null;
-            $response->getBody()->write(json_encode($result));
-            return $response->withHeader('content-type', 'application/json')->withStatus(200);
+
         } catch (PDOException $e) {
             $error = array(
                 "message" => $e->getMessage()
             );
+            $response->getBody()->write(json_encode($error));
         }
-        $response->getBody()->write(json_encode($error));
-        return $response->withHeader('content-type', 'application/json')->withStatus(400);
+
+
         //return $response->withHeader('content-type', 'application/json')->withStatus(400);
     }
-    return true;
+
 }
 
 function deleteTagsInUsers($tag){
