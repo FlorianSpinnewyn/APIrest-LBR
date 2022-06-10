@@ -386,7 +386,7 @@ function addFile( $request,$response,  $args) {
         return $res;
     }
 
-    $nom=$_FILES['file']['tmp_name'];
+    $nom = $request->getParam('fileName');
     $idUser=$_SESSION['id'];
     $auteur=$request->getParam("author");
     $taille=$_FILES['file']['size'];
