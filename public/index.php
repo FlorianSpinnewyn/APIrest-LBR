@@ -32,6 +32,8 @@ $middleware($app);
 $routes = require __DIR__ . '/../src/API/routes.php';
 $routes($app);
 
+
+
 // Run app
 $app->run();
 

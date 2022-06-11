@@ -635,10 +635,7 @@ function deleteUserInFiles($user){
 
 function stream($request,$response, $args)
 {
-    $res = isSession($request,$response,$args);
-    if($res ){
-        return $res;
-    }
+
 
     $file = $args['file'];
     $file = "../files/".$file.'.mp4';
