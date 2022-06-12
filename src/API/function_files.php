@@ -9,7 +9,7 @@ function getAllFiles($request,$response,$args) {
         return $res;
     }
     $tags = $request->getQueryParam("tag");
-
+    $sql = "";
 
     if($_SESSION['role'] == 0){
         $data = getAllAllowedFiles($request,$response,$args);
@@ -30,9 +30,18 @@ function getAllFiles($request,$response,$args) {
         }
     }
 
+    if($request->getQueryParam("mine")=="true"){
+        $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
+    }
+    if($request->getQueryParam("deleted")=="true"){
+        $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
+    }
+    if($request->getQueryParam("tagLess")=="true"){
+        $sql .= "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
+    }
 
-    if($request->getQueryParam("union")=="true") {
-        $sql = "SELECT fichiers.* FROM fichiers ";
+    else if($request->getQueryParam("union")=="true") {
+        $sql .= "SELECT fichiers.* FROM fichiers ";
 
         if ($tags != null) {
             $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
@@ -47,7 +56,7 @@ function getAllFiles($request,$response,$args) {
     }
     else {
         if ($tags != null) {
-            $sql ="SELECT nom_categorie FROM categories";
+            $sql .="SELECT nom_categorie FROM categories";
 
             try {
                 $DB = new DB();
@@ -109,7 +118,7 @@ function getAllFiles($request,$response,$args) {
 
         }
         else{
-            $sql = "SELECT * FROM fichiers";
+            $sql .= "SELECT * FROM fichiers";
         }
 
     }
@@ -151,7 +160,15 @@ function getAllAllowedFiles($request, $response, $args)
     $user = $_SESSION['id'];
     $tags = $request->getQueryParam("tag");
     $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT(";
-    if($request->getQueryParam("union")=="true") {
+
+    if($request->getQueryParam("mine")=="true"){
+        $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
+    }
+    if($request->getQueryParam("sansTag")=="true"){
+        $sql = "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
+    }
+
+    else if($request->getQueryParam("union")=="true") {
         $sql .= "SELECT fichiers.* FROM fichiers ";
 
         if ($tags != null) {
@@ -564,26 +581,46 @@ function deleteFile( $request,$response,  $args) {
     $fileDelete = $args['file'];
 
     $date = date("Y-m-d H:i:s",strtotime("+30 days"));
-    $sql ="UPDATE fichiers SET date_supr= '$date' WHERE nom_fichier='$fileDelete'";
 
-
+    $sql = "SELECT * from fichiers where id_file = '$fileDelete'";
     try {
         $DB = new DB();
         $conn = $DB->connect();
-
         $stmt = $conn->prepare($sql);
-        $result = $stmt->execute();
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $DB = null;
-        $response->getBody()->write(json_encode($result));
-        return $response
-            ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
-    }catch (PDOException $e) {
+        if($result['date_supr'] == null){
+            $sql = "UPDATE fichiers SET date_supr = '$date' WHERE id_file = '$fileDelete'";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $DB = null;
+            return $response
+                ->withHeader('content-type', 'application/json')
+                ->withStatus(200);
+        }
+        else{
+            $sql = "DELETE from fichiers WHERE id_file = '$fileDelete'";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute();
+            $DB = null;
+            deleteFileInTags($fileDelete);
+            unlink("../files/".$fileDelete.explode(".",$result['type'])[1]);
+            return $response
+                ->withHeader('content-type', 'application/json')
+                ->withStatus(200);
+        }
+    }catch (
+        PDOException $e
+    ) {
         $error = array(
-            "message"=> $e->getMessage()
+            "message" => $e->getMessage()
         );
     }
+
+
+
+
     $response->getBody()->write(json_encode($error));
     return $response
         ->withHeader('content-type', 'application/json')

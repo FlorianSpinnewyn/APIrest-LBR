@@ -83,6 +83,15 @@ function addTag( $request,$response,  $args) {
     $nom_tag=$request->getParam("nom_tag");
     $id_user=$request->getParam("id_user");
     $nom_categorie=$request->getParam("nom_categorie");
+    if(isAlreadyExist($nom_tag,$id_user,$nom_categorie)){
+        $error = array(
+            "message" => "Tag already exist"
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(400);
+    }
     
     $sql ="INSERT INTO tags (nom_tag,id_user,nom_categorie) VALUE (:nom_tag,:id_user,:nom_categorie)";
 
@@ -112,6 +121,28 @@ function addTag( $request,$response,  $args) {
     return $response
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
+}
+
+function isAlreadyExist(mixed $nom_tag, mixed $id_user, mixed $nom_categorie)
+{
+    $sql ="SELECT id_tag FROM tags WHERE nom_tag = '$nom_tag' AND nom_categorie = '$nom_categorie'";
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+        $stmt = $conn->query($sql);
+        $files = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $DB = null;
+        if(count($files) > 0){
+            return true;
+        }
+
+        }
+    catch (PDOException $e) {
+        $error = array(
+            "message"=> $e->getMessage()
+        );
+    }
+    return false;
 }
 
 
@@ -254,6 +285,25 @@ function deleteCategorieInTags($categorie){
 function changeCategoryInTags($categorie,$newCategorie){
     $sql ="UPDATE `tags` SET `nom_categorie` = '$newCategorie' WHERE `nom_categorie`='$categorie'";
 
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+
+        $DB = null;
+        return $result;
+    }catch (PDOException $e) {
+        return array(
+            "message"=> $e->getMessage()
+        );
+    }
+}
+
+
+function deleteFileInTags($id_file){
+    $sql = "DELETE FROM `assigner` WHERE `id_file` = $id_file";
     try {
         $DB = new DB();
         $conn = $DB->connect();
