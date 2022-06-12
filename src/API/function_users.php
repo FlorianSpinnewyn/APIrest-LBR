@@ -270,12 +270,12 @@ function addAllowedTagToUser($request,$response,$args){
 }
 
 function getAllowedTags($request,$response,$args){
-    $res = isAdmin($request,$response,  $args);
+    $res = isSession($request,$response,  $args);
     if($res ){
         return $res;
     }
 
-    $user = $args["user"];
+    $user = $_SESSION["id"];
     $sql = "SELECT * FROM tags WHERE id_tag IN(SELECT id_tag FROM autoriser WHERE id_user = $user)";
 
     try {
