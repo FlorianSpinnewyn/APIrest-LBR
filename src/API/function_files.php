@@ -36,6 +36,10 @@ function getAllFiles($request,$response,$args) {
     if($request->getQueryParam("deleted")=="true"){
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
     }
+    else{
+        $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
+    }
+
     if($request->getQueryParam("tagLess")=="true"){
         $sql .= "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
     }
@@ -163,6 +167,12 @@ function getAllAllowedFiles($request, $response, $args)
 
     if($request->getQueryParam("mine")=="true"){
         $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
+    }
+    if($request->getQueryParam("deleted")=="true"){
+        $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
+    }
+    else{
+        $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
     }
     if($request->getQueryParam("sansTag")=="true"){
         $sql = "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
