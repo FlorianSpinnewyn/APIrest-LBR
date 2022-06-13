@@ -135,7 +135,7 @@ function getAllFiles($request,$response,$args) {
     if(str_ends_with($sql, "INTERSECT ")){
         $sql = substr_replace($sql ,"", -10);
     }
-    echo $sql;
+
 
     try {
         $db = new DB();
@@ -266,7 +266,7 @@ function getAllAllowedFiles($request, $response, $args)
     if(str_ends_with($sql, "INTERSECT ")){
         $sql = substr_replace($sql ,"", -10);
     }
-    echo $sql;
+
     try {
         $db = new DB();
         $conn = $db->connect();
@@ -413,7 +413,7 @@ function getAllowedFile($request,$response, $args){
 
 function addFile( $request,$response,  $args) {
     $res = authFilesTags($request,$response,$args);
-    echo  $res;
+
     if($res ){
         return $res;
     }
@@ -427,7 +427,7 @@ function addFile( $request,$response,  $args) {
     $date = $request->getParam("date");
     $str = $_FILES['file']['type']  . $type;
 
-    echo $str;
+
     if($_FILES ['file']['error'] > 0){
         $error = array(
             "message"=> "Erreur lors du transfert"
