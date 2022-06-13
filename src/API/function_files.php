@@ -132,8 +132,10 @@ function getAllFiles($request,$response,$args) {
         $sql .= " LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
-
-
+    if(str_ends_with($sql, "INTERSECT ")){
+        $sql = substr_replace($sql ,"", -10);
+    }
+    echo $sql;
 
     try {
         $db = new DB();
@@ -163,7 +165,7 @@ function getAllAllowedFiles($request, $response, $args)
 {
     $user = $_SESSION['id'];
     $tags = $request->getQueryParam("tag");
-    $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT(";
+    $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT";
 
     if($request->getQueryParam("mine")=="true"){
         $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
@@ -175,7 +177,7 @@ function getAllAllowedFiles($request, $response, $args)
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
     }
     if($request->getQueryParam("sansTag")=="true"){
-        $sql = "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
+        $sql .= "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
     }
 
     else if($request->getQueryParam("union")=="true") {
@@ -261,7 +263,10 @@ function getAllAllowedFiles($request, $response, $args)
         $sql .= " LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
-    
+    if(str_ends_with($sql, "INTERSECT ")){
+        $sql = substr_replace($sql ,"", -10);
+    }
+    echo $sql;
     try {
         $db = new DB();
         $conn = $db->connect();
@@ -442,7 +447,7 @@ function addFile( $request,$response,  $args) {
             ->withStatus(413);
     }
     //check if the files are images or videos
-    if(!($_FILES['file']['type'] == "image/jpeg" || $_FILES['file']['type'] == "image/png" || $_FILES['file']['type'] == "image/gif" || $_FILES['file']['type'] == "video/mp4" || $_FILES['file']['type'] == "video/avi" || $_FILES['file']['type'] == "video/mpeg" || $_FILES['file']['type'] == "video/quicktime"|| $_FILES['file']['type'] == "video/mov")){
+    if(!($_FILES['file']['type'] == "image/jpeg" || $_FILES['file']['type'] == "image/png" || $_FILES['file']['type'] == "image/gif" || $_FILES['file']['type'] == "video/mp4" || $_FILES['file']['type'] == "video/avi" || $_FILES['file']['type'] == "video/mpeg" || $_FILES['file']['type'] == "video/quicktime"|| $_FILES['file']['type'] == "video/mov" || $_FILES['file']['type'] == "audio/mpeg"|| $_FILES['file']['type'] =="audio/wav")){
         $error = array(
             "message"=> "Type de fichier non autorisé"
         );
