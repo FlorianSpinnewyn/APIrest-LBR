@@ -4,9 +4,7 @@
 function getUsersAll($request,$response,$args) {
     $sql ="SELECT id_user,mail,role FROM utilisateurs";
 
-    echo $request->getUri()->getPath();
-    echo $request->getMethod();
-    echo "test";
+
 
     $res = isAdmin($request,$response,$args);
     if($res){
