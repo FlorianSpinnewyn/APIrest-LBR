@@ -44,11 +44,11 @@ function getAllFiles($request,$response,$args) {
     }
 
     if($request->getQueryParam("tagLess")=="true"){
-        $sql .= "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
+        $sql .= " SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
     }
 
     else if($request->getQueryParam("union")=="true") {
-        $sql .= "SELECT fichiers.* FROM fichiers ";
+        $sql .= " SELECT fichiers.* FROM fichiers ";
 
         if ($tags != null) {
             $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
@@ -63,7 +63,7 @@ function getAllFiles($request,$response,$args) {
     }
     else {
         if ($tags != null) {
-            $sql .="SELECT nom_categorie FROM categories";
+            $sql .=" SELECT nom_categorie FROM categories ";
 
             try {
                 $DB = new DB();
@@ -71,7 +71,7 @@ function getAllFiles($request,$response,$args) {
 
                 $stmt = $conn->query($sql);
                 $categories = $stmt->fetchAll(PDO::FETCH_OBJ);
-                $sql = "SELECT * FROM tags ";
+                $sql = " SELECT * FROM tags ";
                 $stmt = $conn->query($sql);
                 $tagsList = $stmt->fetchAll(PDO::FETCH_OBJ);
 
@@ -89,7 +89,7 @@ function getAllFiles($request,$response,$args) {
                             continue;
 
                         $sql .= "(SELECT fichiers.* FROM fichiers,assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
-                        $sql .= "Select id_tag from tags where nom_categorie = '" . $categories[$i]->nom_categorie . "' AND id_tag IN (0,";
+                        $sql .= " Select id_tag from tags where nom_categorie = '" . $categories[$i]->nom_categorie . "' AND id_tag IN (0,";
                         for($j = 0; $j < count($tagsList); $j++){
                             if($tagsList[$j]->nom_categorie == $categories[$i]->nom_categorie && in_array($tagsList[$j]->id_tag,$tags)){
                                 $sql .= $tagsList[$j]->id_tag;
@@ -176,7 +176,7 @@ function getAllAllowedFiles($request, $response, $args)
     $sql .= "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT";
 
     if($request->getQueryParam("mine")=="true"){
-        $sql .= "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
+        $sql .= " SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
     }
     if($request->getQueryParam("deleted")=="true"){
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
@@ -185,11 +185,11 @@ function getAllAllowedFiles($request, $response, $args)
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
     }
     if($request->getQueryParam("sansTag")=="true"){
-        $sql .= "SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
+        $sql .= " SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
     }
 
     else if($request->getQueryParam("union")=="true") {
-        $sql .= "SELECT fichiers.* FROM fichiers ";
+        $sql .= " SELECT fichiers.* FROM fichiers ";
 
         if ($tags != null) {
             $sql .= ",assigner WHERE fichiers.id_file = assigner.id_file AND assigner.id_tag IN (";
@@ -204,7 +204,7 @@ function getAllAllowedFiles($request, $response, $args)
     }
     else {
         if ($tags != null) {
-            $sql2 = "SELECT nom_categorie FROM categories";
+            $sql2 = " SELECT nom_categorie FROM categories";
 
             try {
                 $DB = new DB();
