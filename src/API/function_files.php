@@ -34,7 +34,7 @@ function getAllFiles($request,$response,$args) {
         $sql .= "(";
     }
     if($request->getQueryParam("mine")=="true"){
-        $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
+        $sql .= "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
     }
     if($request->getQueryParam("deleted")=="true"){
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
@@ -176,7 +176,7 @@ function getAllAllowedFiles($request, $response, $args)
     $sql .= "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT";
 
     if($request->getQueryParam("mine")=="true"){
-        $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
+        $sql .= "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
     }
     if($request->getQueryParam("deleted")=="true"){
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
