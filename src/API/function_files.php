@@ -422,7 +422,8 @@ function addFile( $request,$response,  $args) {
     $idUser=$_SESSION['id'];
     $auteur=$request->getParam("author");
     $taille=$_FILES['file']['size'];
-    $dure=$request->getParam("lenght");
+    $duree=$request->getParam("lenght");
+
     $type='.'.explode(".",$_FILES['file']['name'])[count(explode(".",$_FILES['file']['name']))-1];
     $date = $request->getParam("date");
     $str = $_FILES['file']['type']  . $type;
@@ -447,6 +448,7 @@ function addFile( $request,$response,  $args) {
             ->withStatus(413);
     }
     //check if the files are images or videos
+    echo $_FILES['file']['type'];
     if(!($_FILES['file']['type'] == "image/jpeg" || $_FILES['file']['type'] == "image/png" || $_FILES['file']['type'] == "image/gif" || $_FILES['file']['type'] == "video/mp4" || $_FILES['file']['type'] == "video/avi" || $_FILES['file']['type'] == "video/mpeg" || $_FILES['file']['type'] == "video/quicktime"|| $_FILES['file']['type'] == "video/mov" || $_FILES['file']['type'] == "audio/mpeg"|| $_FILES['file']['type'] =="audio/wav")){
         $error = array(
             "message"=> "Type de fichier non autorisé"
@@ -457,6 +459,13 @@ function addFile( $request,$response,  $args) {
             ->withStatus(400);
     }
 
+    if($_FILES["file"]["type"] == "video/mpeg" || $_FILES["file"]["type"] == "video/avi" || $_FILES["file"]["type"] == "video/quicktime"|| $_FILES["file"]["type"] == "video/mov" || $_FILES['file']['type'] == "video/mp4"){
+        $getID3 = new getID3;
+
+        $ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
+        echo json_encode($ThisFileInfo);
+        $duree = floor($ThisFileInfo['playtime_seconds']);
+    }
     $file = $_FILES['file'];
 
 
@@ -472,7 +481,7 @@ function addFile( $request,$response,  $args) {
         $stmt->bindParam(':idUser', $idUser);
         $stmt->bindParam(':auteur', $auteur);
         $stmt->bindParam(':taille', $taille);
-        $stmt->bindParam(':dure', $dure);
+        $stmt->bindParam(':dure', $duree);
 
         $stmt->bindParam(':type', $str);
         $stmt->bindParam(':date', $date);
@@ -481,8 +490,10 @@ function addFile( $request,$response,  $args) {
 
         $db = null;
         $response->getBody()->write(json_encode($result));
-
+        require_once(__DIR__.'/../../getid3/getid3/getid3.php');
         move_uploaded_file($_FILES['file']['tmp_name'], "../files/". $conn->lastInsertId().$type);
+
+
 
         return $response
             ->withHeader('content-type', 'application/json')
@@ -492,6 +503,8 @@ function addFile( $request,$response,  $args) {
             "message"=> $e->getMessage()
         );
     }
+
+
     $response->getBody()->write(json_encode($error));
     return $response
         ->withHeader('content-type', 'application/json')
@@ -681,6 +694,7 @@ function deleteUserInFiles($user){
         );
     }
 }
+
 
 
 
