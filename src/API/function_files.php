@@ -12,6 +12,7 @@ function getAllFiles($request,$response,$args) {
     $sql = "";
 
     if($_SESSION['role'] == 0){
+
         $data = getAllAllowedFiles($request,$response,$args);
         if($data){
             $response->getBody()->write(json_encode($data));
@@ -29,7 +30,9 @@ function getAllFiles($request,$response,$args) {
                 ->withStatus(404);
         }
     }
-
+    if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
+        $sql .= "(";
+    }
     if($request->getQueryParam("mine")=="true"){
         $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
     }
@@ -127,14 +130,14 @@ function getAllFiles($request,$response,$args) {
 
     }
 
-
-    if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
-        $sql .= " LIMIT ".$request->getQueryParam('limit');
-        $sql .= " OFFSET ".$request->getQueryParam('offset');
-    }
     if(str_ends_with($sql, "INTERSECT ")){
         $sql = substr_replace($sql ,"", -10);
     }
+    if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
+        $sql .= ") LIMIT ".$request->getQueryParam('limit');
+        $sql .= " OFFSET ".$request->getQueryParam('offset');
+    }
+
 
 
     try {
@@ -165,7 +168,12 @@ function getAllAllowedFiles($request, $response, $args)
 {
     $user = $_SESSION['id'];
     $tags = $request->getQueryParam("tag");
-    $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT";
+    $sql = "";
+
+    if($request->getQueryParam('limit')!= null AND $request->getQueryParam('offset') != null){
+        $sql .= "(";
+    }
+    $sql .= "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT";
 
     if($request->getQueryParam("mine")=="true"){
         $sql = "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
@@ -256,16 +264,16 @@ function getAllAllowedFiles($request, $response, $args)
 
         }
     }
-
-
-
-    if($request->getQueryParam('limit')!= null AND $request->getQueryParam('offset') != null){
-        $sql .= " LIMIT ".$request->getQueryParam('limit');
-        $sql .= " OFFSET ".$request->getQueryParam('offset');
-    }
     if(str_ends_with($sql, "INTERSECT ")){
         $sql = substr_replace($sql ,"", -10);
     }
+
+
+    if($request->getQueryParam('limit')!= null AND $request->getQueryParam('offset') != null){
+        $sql .= ") LIMIT ".$request->getQueryParam('limit');
+        $sql .= " OFFSET ".$request->getQueryParam('offset');
+    }
+    echo $sql;
 
     try {
         $db = new DB();
