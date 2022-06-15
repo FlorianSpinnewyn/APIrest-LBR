@@ -27,15 +27,14 @@ function getLog($request,$response,$args){
 }
 
 
-function addLog($desc,$type){
+function addLog($type,$status){
     $date =  date("Y-m-d H:i:s");
     if(isset($_SESSION['id'])) {
         $id = $_SESSION['id'];
     }else{
         $id = "";
     }
-    $sql = "INSERT INTO log (description,type,date,$id) VALUES ('$desc','$type','$date','$id')";
-
+    $sql = "INSERT INTO log (type,date,id_user,status_code) VALUES ('$type','$date','$id','$status')";
 
     try {
         $DB = new DB();

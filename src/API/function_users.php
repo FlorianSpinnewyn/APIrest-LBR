@@ -4,6 +4,19 @@
 function getUsersAll($request,$response,$args) {
     $sql ="SELECT id_user,mail,role FROM utilisateurs";
 
+    echo $request->getUri()->getPath();
+    echo $request->getMethod();
+    echo "test";
+
+    $res = isAdmin($request,$response,$args);
+    if($res){
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
+        return $res;
+    }
+
+
+
+
     try {
         $DB = new DB();
         $conn = $DB->connect();
@@ -13,7 +26,7 @@ function getUsersAll($request,$response,$args) {
 
         $DB = null;
         $response->getBody()->write(json_encode($files));
-
+        addLog(" GET /users",200);
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -23,12 +36,18 @@ function getUsersAll($request,$response,$args) {
         );
     }
     $response->getBody()->write(json_encode($error));
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
     return $response
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
 }
 
 function getUser($request,$response,  $args){
+    $res = isAdmin($request,$response,$args);
+    if($res){
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
+        return $res;
+    }
     $id_user = $args['user'];
     $sql ="SELECT id_user,mail,nom_prenom,role,descriptif,mdpFinal FROM utilisateurs WHERE id_user = $id_user";
 
@@ -41,6 +60,7 @@ function getUser($request,$response,  $args){
 
         $db = null;
         $response->getBody()->write(json_encode($file));
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -49,6 +69,7 @@ function getUser($request,$response,  $args){
             "message"=> $e->getMessage()
         );
     }
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
     $response->getBody()->write(json_encode($error));
     return $response
         ->withHeader('content-type', 'application/json')
@@ -59,6 +80,7 @@ function getUser($request,$response,  $args){
 function addUser( $request,$response,  $args) {
     $res = isAdmin($request,$response,  $args);
     if($res ){
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
     }
     $mail=$request->getParam("mail");
@@ -103,6 +125,7 @@ function addUser( $request,$response,  $args) {
        // mail("elliott.vanwormhoudt@student.junia.com","Inscription","Vous venez de vous inscrire. Votre identifiant est $mail et votre mot de passe est $mdp. Vous pouvez vous connecter sur le site en utilisant ces identifiants.<a href ='http://www.example.com'>Veuillez confirmer votre email</a> ",$headers);
 
         $DB = null;
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),201);
         return $response
             ->withHeader('content-type', 'application/json')
             ->withHeader('location', '/api/users/'.$id_user)
@@ -112,6 +135,7 @@ function addUser( $request,$response,  $args) {
             "message"=> $e->getMessage()
         );
     }
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
     $response->getBody()->write(json_encode($error));
 
 }
@@ -120,6 +144,7 @@ function addUser( $request,$response,  $args) {
 function updateUser($request,$response,$args){
     $res = isAdmin($request,$response,  $args);
     if($res ){
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
     }
     $user =$args['user'];
@@ -179,7 +204,7 @@ function updateUser($request,$response,$args){
         $result=$stmt->execute();
         $DB = null;
         $response->getBody()->write(json_encode($files));
-
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -189,6 +214,7 @@ function updateUser($request,$response,$args){
         );
     }
     $response->getBody()->write(json_encode($error));
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
     return $response
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
@@ -198,6 +224,7 @@ function updateUser($request,$response,$args){
 function deleteUser( $request,$response,  $args) {
     $res = isAdmin($request,$response,  $args);
     if($res ){
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
     }
 
@@ -215,7 +242,7 @@ function deleteUser( $request,$response,  $args) {
 
         $DB = null;
         $response->getBody()->write(json_encode($result));
-
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -225,6 +252,7 @@ function deleteUser( $request,$response,  $args) {
             "message"=> $e->getMessage()
         );
     }
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
     $response->getBody()->write(json_encode($error));
     return $response
         ->withHeader('content-type', 'application/json')
@@ -234,6 +262,7 @@ function deleteUser( $request,$response,  $args) {
 function addAllowedTagToUser($request,$response,$args){
     $res = isAdmin($request,$response,  $args);
     if($res ){
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
     }
 
@@ -255,17 +284,19 @@ function addAllowedTagToUser($request,$response,$args){
 
             $DB = null;
             $response->getBody()->write(json_encode($result));
-            //return $response->withHeader('content-type', 'application/json')->withStatus(200);
+            $response->withHeader('content-type', 'application/json')->withStatus(200);
         } catch (PDOException $e) {
             $error = array(
                 "message" => $e->getMessage()
             );
             $response->getBody()->write(json_encode($error));
+            addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
             return $response->withHeader('content-type', 'application/json')->withStatus(400);
         }
 
 
     }
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
 
 }
 
@@ -297,6 +328,7 @@ function removeAllowedTagToUser($request,$response,$args)
 {
     $res = isAdmin($request, $response, $args);
     if ($res) {
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
     }
 
@@ -322,10 +354,12 @@ function removeAllowedTagToUser($request,$response,$args)
             $error = array(
                 "message" => $e->getMessage()
             );
+            addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
             $response->getBody()->write(json_encode($error));
             return $response->withHeader('content-type', 'application/json')->withStatus(400);
         }
     }
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
 }
 
 
@@ -381,9 +415,10 @@ function getYourData($request,$response,$args)
 {
     $res = isSession($request, $response, $args);
     if ($res) {
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
     }
     $response->getBody()->write(json_encode($_SESSION));
-
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
     return $response->withHeader('content-type', 'application/json')->withStatus(200);
 }

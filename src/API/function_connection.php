@@ -3,7 +3,7 @@
 
 function login($request,$response,$args){
 
-    addLog("Login of user ".$request->getParam("mail"),"Login");
+
     $mail = $request->getParam("mail");
     $password = $request->getParam("password");
 
@@ -39,17 +39,19 @@ function login($request,$response,$args){
 
 
                         $response->write(json_encode($myJSON));
-
+                        addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
                         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
                     }
-
+                    addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
                     return $response->withStatus(200)->getBody()->write("utilisateur connecte");
                 }
             }
         }
         if(!$userFound){
+            addLog($request->getMethod(). " ".$request->getUri()->getPath(),404);
             return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
         }
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),404);
         $response->getBody()->write("Mauvais identifiants");
         return $response->withStatus(400);
 
@@ -62,16 +64,18 @@ function login($request,$response,$args){
 
 
 function logout($request,$response,$args){
-    addLog("Logout of user ".$_SESSION['id'],"Logout");
+
     $res = isSession($request,$response,$args);
-    if($res)
+    if($res) {
+        addLog($request->getMethod() . " " . $request->getUri()->getPath(), 401);
         return $res;
+    }
     $params = session_get_cookie_params();
     setcookie(session_name(), '', 0, $params['path'], $params['domain'], $params['secure'], isset($params['httponly']));
     session_unset();
     session_destroy();
     session_write_close();
-
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
    return $response->withStatus(200)->withHeader('Content-type', 'application/json')->withHeader("Set-Cookie", "PHPSESSID=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT");
 
 }

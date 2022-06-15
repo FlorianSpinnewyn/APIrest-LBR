@@ -39,27 +39,39 @@ return function (App $app) {
 
 
     $app->get('/files', function (Request $request, Response $response, array $args) use ($container) {
-        return getAllFiles($request,$response,$args);
+        $data = getAllFiles($request,$response,$args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->get('/files/{file}', function (Request $request, Response $response, array $args) use ($container) {
-        return getFile($request,$response, $args);
+        $data = getFile($request,$response,$args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->post('/files', function (Request $request, Response $response, array $args) use ($container) {
-        return addFile($request,$response, $args);
+        $data = addFile($request,$response,$args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->post('/files/{file}/tags', function (Request $request, Response $response, array $args) use ($container) {
-        addFileTags($request,$response, $args);
+        $data = addFileTags($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->delete('/files/{file}/tags', function (Request $request, Response $response, array $args) use ($container) {
-        return deleteFileTags($request,$response, $args);
+        $data = deleteFileTags($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->delete('/files/{file}', function (Request $request, Response $response, array $args) use ($container) {
-        return deleteFile($request,$response, $args);
+        $data = deleteFile($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     /**--USERS--**/

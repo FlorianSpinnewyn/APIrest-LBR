@@ -6,6 +6,7 @@ function getAllFiles($request,$response,$args) {
     $res = isSession($request,$response,$args);
 
     if($res){
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),401);
         return $res;
     }
     $tags = $request->getQueryParam("tag");
@@ -283,14 +284,19 @@ function getAllAllowedFiles($request, $response, $args)
         $files = $stmt->fetchAll(PDO::FETCH_OBJ);
 
         $db = null;
-        return $files;
+        $response->getBody()->write(json_encode($files));
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(200);
     }catch (PDOException $e) {
         $error = array(
             "message"=> $e->getMessage()
         );
     }
     $response->getBody()->write(json_encode($error));
-    return 0;
+    return $response
+        ->withHeader('content-type', 'application/json')
+        ->withStatus(400);
 
 }
 
@@ -339,7 +345,8 @@ function getFile($request,$response, $args){
                 header("Content-Transfer-Encoding: binary");
                 readfile($download_file);
 
-                exit;
+                return $response
+                    ->withStatus(200);
             }
             else
             {
@@ -372,7 +379,7 @@ function getAllowedFile($request,$response, $args){
         );
         $response->getBody()->write(json_encode($error));
         return $response
-            ->withHeader('content-type', 'application/json')
+
             ->withStatus(404);
     }
     for($i = 0; $i < count($allowedFiles); $i++){
@@ -398,7 +405,8 @@ function getAllowedFile($request,$response, $args){
                     header("Content-Transfer-Encoding: binary");
                     readfile($download_file);
 
-                    exit;
+                    return $response
+                        ->withStatus(200);
                 } else {
                     echo 'File does not exists on given path';
                     return $response
@@ -471,6 +479,7 @@ function addFile( $request,$response,  $args) {
          $getID3 = new getID3;
 
         $ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
+        echo json_encode($ThisFileInfo);
         $duree = floor($ThisFileInfo['playtime_seconds']);
     }
     $file = $_FILES['file'];
@@ -553,10 +562,14 @@ function addFileTags( $request,$response,  $args)
             $error = array(
                 "message" => $e->getMessage()
             );
+            $response->getBody()->write(json_encode($error));
+            return $response->withHeader('content-type', 'application/json')->withStatus(400);
         }
-        //$response->getBody()->write(json_encode($error));
-        //return $response->withHeader('content-type', 'application/json')->withStatus(400);
+
     }
+
+    return $response->withHeader('content-type', 'application/json')->withStatus(200);
+
 
 }
 
@@ -592,12 +605,14 @@ function deleteFileTags( $request,$response, $args){
             $error = array(
                 "message" => $e->getMessage()
             );
+            $response->getBody()->write(json_encode($error));
+            return $response->withHeader('content-type', 'application/json')->withStatus(400);
         }
         //$response->getBody()->write(json_encode($error));
         //return $response->withHeader('content-type', 'application/json')->withStatus(400);
 
     }
-    return 'true';
+    return $response->withHeader('content-type', 'application/json')->withStatus(200);
 }
 
 
