@@ -498,7 +498,7 @@ function addFile( $request,$response,  $args) {
 
         $db = null;
         $response->getBody()->write(json_encode($result));
-        require_once(__DIR__.'/../../getid3/getid3/getid3.php');
+        //require_once(__DIR__.'/../../getid3/getid3/getid3.php');
         move_uploaded_file($_FILES['file']['tmp_name'], "../files/". $conn->lastInsertId().$type);
 
 
