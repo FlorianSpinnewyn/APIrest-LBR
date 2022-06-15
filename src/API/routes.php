@@ -145,14 +145,20 @@ return function (App $app) {
         return $data;
     });
     $app->post('/categories', function (Request $request, Response $response, array $args) use ($container) {
-        return addCategorie( $request,$response,  $args);
+        $data = addCategorie( $request,$response,  $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->put('/categories/{category}',function (Request $request, Response $response, array $args) use ($container) {
-        return renameCategorie($request,$response, $args);
+        $data = renameCategorie($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
     $app->delete('/categories/{category}', function (Request $request, Response $response, array $args) use ($container) {
-        return deleteCategorie($request,$response, $args);
+        $data = deleteCategorie($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
 
