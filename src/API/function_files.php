@@ -703,21 +703,12 @@ function deleteUserInFiles($user){
     }
 }
 
-
-
-
-
 function stream($request,$response, $args)
 {
-
-
     $file = $args['file'];
     $file = "../files/".$file.'.mp4';
-
-
     $stream = new VideoStream($file);
     $stream->start();
-
 }
 
 

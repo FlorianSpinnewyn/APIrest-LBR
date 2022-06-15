@@ -3,7 +3,7 @@
 
 function login($request,$response,$args){
 
-
+    addLog("Login of user ".$request->getParam("mail"),"Login");
     $mail = $request->getParam("mail");
     $password = $request->getParam("password");
 
@@ -27,9 +27,14 @@ function login($request,$response,$args){
                         'cookie_secure' => 0,
                         'cookie_httponly' => 1
                     ]);
-
                     $_SESSION['role'] = $user[$i]->role;
                     $_SESSION['id'] = $user[$i]->id_user;
+                    if($user[$i]->mdpFinal == 0)
+                    {
+                        $_SESSION['mdpFinal'] = false;
+                        return $response->withStatus(200)->write("Vous devez changer votre mot de passe");
+                    }
+
                     return $response->withStatus(200)->getBody()->write("utilisateur connecte");
                 }
             }
@@ -46,7 +51,10 @@ function login($request,$response,$args){
     }
 }
 
+
+
 function logout($request,$response,$args){
+    addLog("Logout of user ".$_SESSION['id'],"Logout");
     $res = isSession($request,$response,$args);
     if($res)
         return $res;

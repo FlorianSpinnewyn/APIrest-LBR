@@ -9,6 +9,7 @@ require __DIR__ . '/function_connection.php';
 require __DIR__ . '/function_users.php';
 require __DIR__ . '/function_files.php';
 require __DIR__ . '/function_tags.php';
+require __DIR__ . '/function_logs.php';
 require __DIR__ . '/VideoStream.php';
 require __DIR__ . '/../dataBaseAcces.php';
 
@@ -134,7 +135,7 @@ return function (App $app) {
 
 
     $app->get('/stream/{file}', function (Request $request, Response $response, array $args) use ($container) {
-        return stream($request,$response, $args);
+         stream($request,$response, $args);
     });
 
 

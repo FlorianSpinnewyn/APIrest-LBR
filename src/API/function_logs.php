@@ -27,6 +27,29 @@ function getLog($request,$response,$args){
 }
 
 
-function addLog(){
+function addLog($desc,$type){
+    $date =  date("Y-m-d H:i:s");
+    if(isset($_SESSION['id'])) {
+        $id = $_SESSION['id'];
+    }else{
+        $id = "";
+    }
+    $sql = "INSERT INTO log (description,type,date,$id) VALUES ('$desc','$type','$date','$id')";
 
+
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+        $stmt = $conn->prepare($sql);
+
+        $result = $stmt->execute();
+
+        $DB = null;
+        return $result;
+    } catch (PDOException $e) {
+        $error = array(
+            "message" => $e->getMessage()
+        );
+    }
+    return $error;
 }
