@@ -479,7 +479,7 @@ function addFile( $request,$response,  $args) {
          $getID3 = new getID3;
 
         $ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
-        echo json_encode($ThisFileInfo);
+
         $duree = floor($ThisFileInfo['playtime_seconds']);
     }
     $file = $_FILES['file'];

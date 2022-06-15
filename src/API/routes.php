@@ -112,19 +112,27 @@ return function (App $app) {
     
     /**--TAGS--**/
     $app->get('/tags', function (Request $request, Response $response, array $args) use ($container) {
-        return getAllTags($request,$response,$args);
+        $data = getAllTags($request,$response,$args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->post('/tags', function (Request $request, Response $response, array $args) use ($container) {
-        return addTag($request,$response, $args);
+        $data = addTag($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->delete('/tags/{tag}', function (Request $request, Response $response, array $args) use ($container) {
-        return deleteTag($request,$response, $args);
+        $data = deleteTag($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
     $app->put('/tags/{tag}', function (Request $request, Response $response, array $args) use ($container) {
-        return modifyTag($request,$response, $args);
+        $data =  modifyTag($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
 
 
@@ -132,7 +140,9 @@ return function (App $app) {
 
     //----CATEGORIE----//
     $app->get('/categories', function (Request $request, Response $response, array $args) use ($container) {
-        return getAllCategories($response, $args);
+        $data =  getAllCategories($response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
     });
     $app->post('/categories', function (Request $request, Response $response, array $args) use ($container) {
         return addCategorie( $request,$response,  $args);

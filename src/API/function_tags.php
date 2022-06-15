@@ -111,7 +111,7 @@ function addTag( $request,$response,  $args) {
 
         return $response
             ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
+            ->withStatus(201);
     }catch (PDOException $e) {
         $error = array(
             "message"=> $e->getMessage()

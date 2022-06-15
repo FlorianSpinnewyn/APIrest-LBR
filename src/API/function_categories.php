@@ -48,7 +48,7 @@ function addCategorie( $request,$response,  $args)
         $response->getBody()->write(json_encode($result));
         return $response
             ->withHeader('content-type', 'application/json')
-            ->withStatus(200);
+            ->withStatus(201);
     } catch (PDOException $e) {
         $error = array(
             "message" => $e->getMessage()

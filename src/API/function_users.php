@@ -419,6 +419,6 @@ function getYourData($request,$response,$args)
         return $res;
     }
     $response->getBody()->write(json_encode($_SESSION));
-    addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
     return $response->withHeader('content-type', 'application/json')->withStatus(200);
 }
