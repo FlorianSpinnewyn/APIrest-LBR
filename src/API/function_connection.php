@@ -32,7 +32,15 @@ function login($request,$response,$args){
                     if($user[$i]->mdpFinal == 0)
                     {
                         $_SESSION['mdpFinal'] = false;
-                        return $response->withStatus(200)->write("Vous devez changer votre mot de passe");
+                        $myJSON =   new stdClass();
+                        $myJSON->id = $user[$i]->id_user;
+                        $myJSON->role = $user[$i]->role;
+                        $myJSON->mdpFinal = false;
+
+
+                        $response->write(json_encode($myJSON));
+
+                        return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
                     }
 
                     return $response->withStatus(200)->getBody()->write("utilisateur connecte");

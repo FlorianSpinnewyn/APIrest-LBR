@@ -273,7 +273,7 @@ function getAllAllowedFiles($request, $response, $args)
         $sql .= ") LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
-    echo $sql;
+
 
     try {
         $db = new DB();
@@ -425,7 +425,7 @@ function addFile( $request,$response,  $args) {
     if($res ){
         return $res;
     }
-
+    require_once(__DIR__.'/../../getid3/getid3/getid3.php');
     $nom = $request->getParam('fileName');
     $idUser=$_SESSION['id'];
     $auteur=$request->getParam("author");
@@ -456,7 +456,7 @@ function addFile( $request,$response,  $args) {
             ->withStatus(413);
     }
     //check if the files are images or videos
-    echo $_FILES['file']['type'];
+
     if(!($_FILES['file']['type'] == "image/jpeg" || $_FILES['file']['type'] == "image/png" || $_FILES['file']['type'] == "image/gif" || $_FILES['file']['type'] == "video/mp4" || $_FILES['file']['type'] == "video/avi" || $_FILES['file']['type'] == "video/mpeg" || $_FILES['file']['type'] == "video/quicktime"|| $_FILES['file']['type'] == "video/mov" || $_FILES['file']['type'] == "audio/mpeg"|| $_FILES['file']['type'] =="audio/wav")){
         $error = array(
             "message"=> "Type de fichier non autorisé"
@@ -468,11 +468,10 @@ function addFile( $request,$response,  $args) {
     }
 
     if($_FILES["file"]["type"] == "video/mpeg" || $_FILES["file"]["type"] == "video/avi" || $_FILES["file"]["type"] == "video/quicktime"|| $_FILES["file"]["type"] == "video/mov" || $_FILES['file']['type'] == "video/mp4"){
-        /* $getID3 = new getID3;
+         $getID3 = new getID3;
 
         $ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
-        echo json_encode($ThisFileInfo);
-        $duree = floor($ThisFileInfo['playtime_seconds']);*/
+        $duree = floor($ThisFileInfo['playtime_seconds']);
     }
     $file = $_FILES['file'];
 
@@ -498,7 +497,7 @@ function addFile( $request,$response,  $args) {
 
         $db = null;
         $response->getBody()->write(json_encode($result));
-        //require_once(__DIR__.'/../../getid3/getid3/getid3.php');
+
         move_uploaded_file($_FILES['file']['tmp_name'], "../files/". $conn->lastInsertId().$type);
 
 
