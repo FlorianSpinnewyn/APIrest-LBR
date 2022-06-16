@@ -301,7 +301,7 @@ function addAllowedTagToUser($request,$response,$args){
 function getAllowedTags($request,$response,$args){
 
     $user = $_SESSION["id"];
-    $sql = "SELECT * FROM tags WHERE id_tag IN(SELECT id_tag FROM autoriser WHERE id_user = $user)";
+    $sql = "SELECT * FROM tags WHERE id_tag IN(SELECT id_tag FROM autoriser WHERE id_user = $user) UNION SELECT * FROM tags WHERE id_user = $user";
 
     try {
         $DB = new DB();
