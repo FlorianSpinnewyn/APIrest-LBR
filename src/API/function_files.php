@@ -21,10 +21,7 @@ function getAllFiles($request,$response,$args) {
                 ->withStatus(200);
         }
         else{
-            $error = array(
-                "message"=> "Aucun fichier trouve/erreur de parametres"
-            );
-            $response->getBody()->write(json_encode($error));
+
             return $response
                 ->withHeader('content-type', 'application/json')
                 ->withStatus(404);
@@ -42,9 +39,13 @@ function getAllFiles($request,$response,$args) {
     else{
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
     }
+    if($request->getQueryParam("extension") != null){
+        $sql .= "(SELECT * FROM fichiers WHERE type = '".$request->getQueryParam("extension")."') INTERSECT ";
+    }
+
 
     if($request->getQueryParam("tagLess")=="true"){
-        $sql .= " SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
+        $sql .= " (SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)) INTERSECT ";
     }
 
     else if($request->getQueryParam("union")=="true") {
@@ -184,9 +185,12 @@ function getAllAllowedFiles($request, $response, $args)
     else{
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
     }
+    if($request->getQueryParam("extension") != null){
+        $sql .= "(SELECT * FROM fichiers WHERE type = '".$request->getQueryParam("extension")."') INTERSECT ";
+    }
 
     if($request->getQueryParam("sansTag")=="true"){
-        $sql .= " SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
+        $sql .= " (SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner) ) INTERSECT ";
     }
 
     else if($request->getQueryParam("union")=="true") {
@@ -436,6 +440,7 @@ function addFile( $request,$response,  $args) {
         return $res;
     }
     require_once(__DIR__.'/../../getid3/getid3/getid3.php');
+
     $nom = $request->getParam('fileName');
     $idUser=$_SESSION['id'];
     $auteur=$request->getParam("author");
@@ -478,11 +483,11 @@ function addFile( $request,$response,  $args) {
     }
 
     if($_FILES["file"]["type"] == "video/mpeg" || $_FILES["file"]["type"] == "video/avi" || $_FILES["file"]["type"] == "video/quicktime"|| $_FILES["file"]["type"] == "video/mov" || $_FILES['file']['type'] == "video/mp4"){
-         $getID3 = new getID3;
+         //$getID3 = new getID3;
 
-        $ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
+        //$ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
 
-        $duree = floor($ThisFileInfo['playtime_seconds']);
+       // $duree = floor($ThisFileInfo['playtime_seconds']);
     }
 
 
