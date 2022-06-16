@@ -41,11 +41,16 @@ function getUsersAll($request,$response,$args) {
 }
 
 function getUser($request,$response,  $args){
-    $res = isAdmin($request,$response,$args);
-    if($res or $args['user'] != $_SESSION['id']){
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
+    $res = isSession($request, $response, $args);
+    if ($res) {
+        addLog($request->getMethod() . " " . $request->getUri()->getPath(), $res->getStatusCode());
         return $res;
     }
+
+    if($_SESSION['role'] == 0 and $args['user'] != $_SESSION['id']) {
+        return $response->withStatus(403);
+    }
+
     $id_user = $args['user'];
     $sql ="SELECT id_user,mail,nom_prenom,role,descriptif,mdpFinal FROM utilisateurs WHERE id_user = $id_user";
 
