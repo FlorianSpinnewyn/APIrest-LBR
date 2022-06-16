@@ -75,7 +75,7 @@ function logout($request,$response,$args){
     session_unset();
     session_destroy();
     session_write_close();
-    addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
+    addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
    return $response->withStatus(200)->withHeader('Content-type', 'application/json')->withHeader("Set-Cookie", "PHPSESSID=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT");
 
 }
@@ -195,6 +195,10 @@ function isSession($request,$response,$args){
 
 function checkIfOwnedFile($request,$response,$args){
     $fichier = $args['file'];
+    if($_SESSION['role'] == 1)
+        return $response
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(403);
     if($_SESSION['role']== 0){
         $sql ="SELECT * FROM fichiers WHERE id_user=".$_SESSION['id'];
         try {
@@ -213,7 +217,7 @@ function checkIfOwnedFile($request,$response,$args){
             }
             if(!$inside){
                 $error = array(
-                    "message"=> "Vous n'avez pas le droit d'ajouter des tags a ce fichier"
+                    "message"=> "Vous n'avez pas le droit de modifier des tags a ce fichier"
                 );
                 $response->getBody()->write(json_encode($error));
                 return $response
@@ -245,12 +249,12 @@ function checkIfOwnedTag($request,$response,$args){
             $conn = $db->connect();
 
             $stmt = $conn->query($sql);
-            $tag = $stmt->fetch(PDO::FETCH_OBJ);
+            $tags = $stmt->fetch(PDO::FETCH_OBJ);
 
             $db = null;
             $inside = false;
-            for($i = 0; $i < count($tag); $i++){
-                if($tag[$i]->id_tag == $tag){
+            for($i = 0; $i < count($tags); $i++){
+                if($tags[$i]->id_tag == $tag){
                     $inside = true;
                 }
             }

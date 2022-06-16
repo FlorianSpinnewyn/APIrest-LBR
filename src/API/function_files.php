@@ -484,7 +484,7 @@ function addFile( $request,$response,  $args) {
 
         $duree = floor($ThisFileInfo['playtime_seconds']);
     }
-    $file = $_FILES['file'];
+
 
 
 
@@ -569,15 +569,42 @@ function addFileTags( $request,$response,  $args)
         }
 
     }
-
     return $response->withHeader('content-type', 'application/json')->withStatus(200);
+}
 
+function getFileTags($request,$response, $args){
+    $fichier = $args['file'];
+    $res = isSession($request,$response, $args);
+    if($res)
+        return $res;
+    $res2 = checkIfOwnedFile($request,$response,$args);
+    if($res2 ){
+        return $res2;
+    }
+    $sql = "SELECT * from tags WHERE id_tag IN(SELECT id_tag FROM assigner WHERE id_file = $fichier )";
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+        $result = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+
+        $DB = null;
+        $response->getBody()->write(json_encode($result));
+        return $response->withHeader('content-type', 'application/json')->withStatus(200);
+    } catch (PDOException $e) {
+        $error = array(
+            "message" => $e->getMessage()
+        );
+        $response->getBody()->write(json_encode($error));
+        return $response->withHeader('content-type', 'application/json')->withStatus(400);
+    }
 
 }
 
 
 function deleteFileTags( $request,$response, $args){
-
     $res = authFilesTags($request,$response,$args);
     if($res ){
         return $res;

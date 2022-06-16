@@ -40,7 +40,6 @@ function addLog($type,$status){
         $DB = new DB();
         $conn = $DB->connect();
         $stmt = $conn->prepare($sql);
-
         $result = $stmt->execute();
 
         $DB = null;

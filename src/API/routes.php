@@ -55,6 +55,11 @@ return function (App $app) {
         addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
+    $app->get('/files/{file}/tags', function (Request $request, Response $response, array $args) use ($container) {
+        $data = getFileTags($request,$response, $args);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
+    });
 
     $app->post('/files/{file}/tags', function (Request $request, Response $response, array $args) use ($container) {
         $data = addFileTags($request,$response, $args);
