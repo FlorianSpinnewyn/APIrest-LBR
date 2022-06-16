@@ -42,7 +42,7 @@ function getUsersAll($request,$response,$args) {
 
 function getUser($request,$response,  $args){
     $res = isAdmin($request,$response,$args);
-    if($res){
+    if($res or $args['user'] != $_SESSION['id']){
         addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
     }
