@@ -16,7 +16,6 @@ function getAllFiles($request,$response,$args) {
 
         $data = getAllAllowedFiles($request,$response,$args);
         if($data){
-            $response->getBody()->write(json_encode($data));
             return $response
                 ->withHeader('content-type', 'application/json')
                 ->withStatus(200);
@@ -185,6 +184,7 @@ function getAllAllowedFiles($request, $response, $args)
     else{
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
     }
+
     if($request->getQueryParam("sansTag")=="true"){
         $sql .= " SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)";
     }
@@ -284,7 +284,9 @@ function getAllAllowedFiles($request, $response, $args)
         $files = $stmt->fetchAll(PDO::FETCH_OBJ);
 
         $db = null;
+
         $response->getBody()->write(json_encode($files));
+
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
