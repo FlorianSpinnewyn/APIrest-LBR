@@ -12,11 +12,12 @@
         }
     ],
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.1",
         "ext-fileinfo": "*",
         "ext-ftp": "*",
         "ext-json": "*",
         "ext-pdo": "*",
+        "google/apiclient": "^2.12",
         "monolog/monolog": "^1.17",
         "slim/php-view": "^2.0",
         "slim/slim": "^3.1"
