@@ -256,7 +256,7 @@ function getAllAllowedFiles($request, $response, $args)
                 if (str_ends_with($sql, "INTERSECT ")) {
                     $sql = substr_replace($sql, "", -10);
                 }
-                $sql .= ")";
+
             } catch (PDOException $e) {
                 $error = array(
                     "message" => $e->getMessage()
@@ -274,7 +274,7 @@ function getAllAllowedFiles($request, $response, $args)
         $sql .= ") LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
-
+    echo $sql;
 
     try {
         $db = new DB();
@@ -374,16 +374,32 @@ function getFile($request,$response, $args){
 
 function getAllowedFile($request,$response, $args){
     $id_file = $args['file'];
-    $allowedFiles = (getAllAllowedFiles($request,$response,$args));
-    if(!$allowedFiles){
+    $user = $_SESSION['id'];
+
+    $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))";
+    try {
+        $db = new DB();
+        $conn = $db->connect();
+
+        $stmt = $conn->query($sql);
+        $allowedFiles = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        $db = null;
+
+    }catch (PDOException $e) {
         $error = array(
-            "message"=> "Aucun fichier trouve/erreur de parametres"
+            "message"=> $e->getMessage()
         );
+    }
+
+    if(count($allowedFiles) == 0){
         $response->getBody()->write(json_encode($error));
         return $response
-
-            ->withStatus(404);
+            ->withHeader('content-type', 'application/json')
+            ->withStatus(400);
     }
+
+
     for($i = 0; $i < count($allowedFiles); $i++){
         if($allowedFiles[$i]->id_file == $id_file) {
             $file = $allowedFiles[$i];
