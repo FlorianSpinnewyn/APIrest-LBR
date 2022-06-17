@@ -3,10 +3,24 @@
 
 function login($request,$response,$args){
 
-
+    echo $request->headers;
     $mail = $request->getParam("mail");
     $password = $request->getParam("password");
+    $CLIENT_ID = "349453641732-i9fnplintku85hrcjuieaghqjqskq87q.apps.googleusercontent.com";
 
+    $id_token  = $request->headers->get('Authorization');
+
+    $client = new Google_Client(['client_id' => $CLIENT_ID]);  // Specify the CLIENT_ID of the app that accesses the backend
+    $payload = $client->verifyIdToken($id_token);
+    if ($payload) {
+        $userid = $payload['sub'];
+        echo "success";
+        echo $userid;
+        // If request specified a G Suite domain:
+        //$domain = $payload['hd'];
+    } else {
+
+    }
 
     $sql = "SELECT * FROM utilisateurs";
     try{
