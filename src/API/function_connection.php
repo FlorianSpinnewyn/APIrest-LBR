@@ -2,25 +2,12 @@
 
 
 function login($request,$response,$args){
-
-    //echo $request->headers;
     $mail = $request->getParam("mail");
     $password = $request->getParam("password");
-    $CLIENT_ID = "349453641732-i9fnplintku85hrcjuieaghqjqskq87q.apps.googleusercontent.com";
 
-    /*$id_token  = $request->headers->get('Authorization');
 
-    $client = new Google_Client(['client_id' => $CLIENT_ID]);  // Specify the CLIENT_ID of the app that accesses the backend
-    $payload = $client->verifyIdToken($id_token);
-    if ($payload) {
-        $userid = $payload['sub'];
-        echo "success";
-        echo $userid;
-        // If request specified a G Suite domain:
-        //$domain = $payload['hd'];
-    } else {
+    //remove the Bearer from the cookie auth._token.google
 
-    }*/
 
     $sql = "SELECT * FROM utilisateurs";
     try{
@@ -65,7 +52,7 @@ function login($request,$response,$args){
             addLog($request->getMethod(). " ".$request->getUri()->getPath(),404);
             return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
         }
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),404);
+        addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
         $response->getBody()->write("Mauvais identifiants");
         return $response->withStatus(400);
 
@@ -75,6 +62,75 @@ function login($request,$response,$args){
     }
 }
 
+function loginGoogle($request,$response,$args){
+    echo json_encode($request->getCookieParams()['auth._token.google']);
+
+    $CLIENT_ID = "349453641732-i9fnplintku85hrcjuieaghqjqskq87q.apps.googleusercontent.com";
+    $token = str_replace("Bearer ","",$request->getCookieParams()['auth._token.google']);
+
+    $accessToken = 'access token';
+    $userDetails = file_get_contents('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $token);
+    $userData = json_decode($userDetails);
+
+    if (!empty($userData)) {
+
+        $googleUserId = '';
+        $googleEmail = '';
+        $googleVerified = '';
+        $googleName = '';
+        $googleUserName = '';
+
+
+
+        if (isset($userData->id)) {
+            $googleUserId = $userData->id;
+        }
+        if (isset($userData->email)) {
+            $googleEmail = $userData->email;
+            $googleEmailParts = explode("@", $googleEmail);
+            $googleUserName = $googleEmailParts[0];
+        }
+        if (isset($userData->verified_email)) {
+            $googleVerified = $userData->verified_email;
+        }
+        if (isset($userData->name)) {
+            $googleName = $userData->name;
+        }
+    } else {
+
+        echo "Not logged In";
+    }
+
+    $sql = "SELECT * FROM utilisateurs WHERE mail = '$googleEmail'";
+    try {
+        $db = new db();
+        $db = $db->connect();
+        $stmt = $db->query($sql);
+        $user = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+        if (count($user) == 0) {
+            $sql = "INSERT INTO utilisateurs (mail,nom_prenom,mdp,mdpFinal,role) VALUES ('$googleEmail','$googleUserName','','1',1)";
+            $db = new db();
+            $db = $db->connect();
+            $stmt = $db->query($sql);
+            $db = null;
+        }
+        else{
+            session_start([
+                'use_only_cookies' => 1,
+                'cookie_lifetime' => 0,
+                'cookie_secure' => 0,
+                'cookie_httponly' => 1
+            ]);
+            $_SESSION['role'] = $user[0]->role;
+            $_SESSION['id'] = $user[0]->id_user;
+            $_SESSION['mdpFinal'] = 1;
+        }
+    }
+    catch (PDOException $e) {
+        echo '{"error": {"text": '.$e->getMessage().'}}';
+    }
+}
 
 
 function logout($request,$response,$args){

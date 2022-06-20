@@ -20,8 +20,11 @@ return function (App $app) {
 
 
     /**--Connection--**/
-    $app->post('/connection', function (Request $request, Response $response, array $args) use ($container) {
-        login($request,$response,$args);
+    $app->post('/connection', function (Request $request, Response $response, array $args) use ($container,$app) {
+        login($request,$response,$args,$app);
+    });
+    $app->post('/connection/google', function (Request $request, Response $response, array $args) use ($container,$app) {
+        loginGoogle($request,$response,$args,$app);
     });
     $app->put('/connection', function (Request $request, Response $response, array $args) use ($container) {
         changePassword($request,$response,$args);
