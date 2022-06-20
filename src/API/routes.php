@@ -12,6 +12,7 @@ require __DIR__ . '/function_tags.php';
 require __DIR__ . '/function_logs.php';
 require __DIR__ . '/VideoStream.php';
 require __DIR__ . '/../dataBaseAcces.php';
+require __DIR__ . '/function_mail.php';
 
 
 
