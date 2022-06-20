@@ -84,11 +84,12 @@ function passwordForgotten($request,$response,$args){
         $db = $db->connect();
         $stmt = $db->query($sql);
         $db = null;
-
+        return $response->withStatus(200)->getBody()->write("token envoye");
     }
     catch(PDOException|Exception $e){
         echo '{"error": {"text": '.$e->getMessage().'}}';
     }
+    return $response->withStatus(400);
 
 
 
