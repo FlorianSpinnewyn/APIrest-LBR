@@ -28,7 +28,7 @@ return function (App $app) {
         loginGoogle($request,$response,$args,$app);
     });
     $app->put('/connection', function (Request $request, Response $response, array $args) use ($container) {
-        changePassword($request,$response,$args);
+        return changePassword($request,$response,$args);
     });
     $app->delete('/connection', function (Request $request, Response $response, array $args) use ($app, $container) {
 
