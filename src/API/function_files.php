@@ -34,6 +34,7 @@ function getAllFiles($request,$response,$args) {
         $sql .= "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
     }
     if($request->getQueryParam("deleted")=="true"){
+        deleteFiles30day();
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
     }
     else{
@@ -760,3 +761,18 @@ function stream($request,$response, $args)
 }
 
 
+function deleteFiles30day() {
+    $sql="DELETE FROM fichiers WHERE DATEDIFF(NOW(),date_supr)>0";
+    try {
+        $DB = new DB();
+        $conn = $DB->connect();
+
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->execute();
+
+        $DB = null;
+        return ;
+    }catch (PDOException $e) {
+        return ;
+    }
+}

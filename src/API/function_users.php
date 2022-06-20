@@ -125,6 +125,11 @@ function addUser( $request,$response,  $args) {
             'X-Mailer' => 'PHP/' . phpversion()
         );;
 
+        if($mdpFinal == 1){
+            finalSignUp($mail,$request->getParam("password"));
+        }else{
+            SignUp($mail,$request->getParam("password"));
+        }
        // mail("elliott.vanwormhoudt@student.junia.com","Inscription","Vous venez de vous inscrire. Votre identifiant est $mail et votre mot de passe est $mdp. Vous pouvez vous connecter sur le site en utilisant ces identifiants.<a href ='http://www.example.com'>Veuillez confirmer votre email</a> ",$headers);
 
         $DB = null;
