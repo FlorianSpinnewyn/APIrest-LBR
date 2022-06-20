@@ -349,11 +349,15 @@ function checkIfOwnedFile($request,$response,$args){
 
             $db = null;
             $inside = false;
-            for($i = 0; $i < count($file); $i++){
-                if($file[$i]->id_file == $fichier){
-                    $inside = true;
+            if(is_countable($file)){
+                foreach ($file as $f) {
+                    if($f->id_fichier == $fichier){
+                        $inside = true;
+                    }
                 }
             }
+
+
             if(!$inside){
                 $error = array(
                     "message"=> "Vous n'avez pas le droit de modifier des tags a ce fichier"
