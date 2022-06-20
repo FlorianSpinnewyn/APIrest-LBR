@@ -12,9 +12,6 @@ function getUsersAll($request,$response,$args) {
         return $res;
     }
 
-
-
-
     try {
         $DB = new DB();
         $conn = $DB->connect();
@@ -24,7 +21,7 @@ function getUsersAll($request,$response,$args) {
 
         $DB = null;
         $response->getBody()->write(json_encode($files));
-        addLog(" GET /users",200);
+
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -63,7 +60,6 @@ function getUser($request,$response,  $args){
 
         $db = null;
         $response->getBody()->write(json_encode($file));
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -427,6 +423,5 @@ function getYourData($request,$response,$args)
         return $res;
     }
     $response->getBody()->write(json_encode($_SESSION));
-    addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
     return $response->withHeader('content-type', 'application/json')->withStatus(200);
 }

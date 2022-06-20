@@ -62,6 +62,39 @@ function login($request,$response,$args){
     }
 }
 
+
+function passwordForgotten($request,$response,$args){
+    $mail = $request->getQueryParams('mail');
+    $sql = "SELECT * FROM utilisateurs WHERE mail = '$mail'";
+
+    try{
+        $db = new db();
+        $db = $db->connect();
+        $stmt = $db->query($sql);
+        $user = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+        if(!is_countable($user)){
+
+            return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
+        }
+        $user = $user[0];
+        $token = bin2hex(random_bytes(32));
+        $sql = "UPDATE utilisateurs SET token_mdp = '$token' WHERE id_user = '$user->id_user'";
+        $db = new db();
+        $db = $db->connect();
+        $stmt = $db->query($sql);
+        $db = null;
+
+    }
+    catch(PDOException|Exception $e){
+        echo '{"error": {"text": '.$e->getMessage().'}}';
+    }
+
+
+}
+
+
+
 function loginGoogle($request,$response,$args){
     echo json_encode($request->getCookieParams()['auth._token.google']);
 
@@ -173,8 +206,44 @@ function isAdmin($request,$response,$args){
 
 function changePassword($request,$response,$args)
 {
+
+
+    if($request->getParam("password") !=null and $request->getParam("token") !=  null){
+        $token = $request->getParam("token");
+
+       $sql = "SELECT * FROM utilisateurs WHERE token_mdp = '$token'";
+
+        try {
+            $db = new db();
+            $db = $db->connect();
+            $stmt = $db->query($sql);
+            $user = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $db = null;
+            if (!is_countable($user)) {
+
+                return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
+            }
+            $user = $user[0];
+            $sql = "UPDATE utilisateurs SET mdp = '" . $request->getParam("password") . "',token_mdp = NULL WHERE id_user = '$user->id_user'";
+
+            $db = new db();
+            $db = $db->connect();
+            $stmt = $db->query($sql);
+            $db = null;
+            return $response->withStatus(200)->getBody()->write("Mot de passe changé");
+        }
+        catch (PDOException $e) {
+            echo '{"error": {"text": '.$e->getMessage().'}}';
+        }
+        return $response->withStatus(404)->getBody()->write("utilisateur non trouve/token invalide");
+    }
+
+
+
+
     $res = isSession($request, $response, $args);
-    if ($res)
+
+    if ($res )
         return $res;
 
 

@@ -397,8 +397,9 @@ function getAllowedFile($request,$response, $args){
         );
     }
 
-    if(count($allowedFiles) == 0){
-        $response->getBody()->write(json_encode($error));
+    if(!is_countable($allowedFiles)){
+
+
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(400);

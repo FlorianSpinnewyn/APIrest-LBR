@@ -35,6 +35,10 @@ return function (App $app) {
         return logout($request,$response,$args);
     });
 
+    $app->get('/connection', function (Request $request, Response $response, array $args) use ($container) {
+        return passwordForgotten($request, $response, $args);
+    });
+
 
     $app->get('/', function (Request $request, Response $response, array $args) use ($container) {
         return '{"test":"true"}';
@@ -44,7 +48,7 @@ return function (App $app) {
 
     $app->get('/files', function (Request $request, Response $response, array $args) use ($container) {
         $data = getAllFiles($request,$response,$args);
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
 
@@ -122,7 +126,7 @@ return function (App $app) {
     /**--TAGS--**/
     $app->get('/tags', function (Request $request, Response $response, array $args) use ($container) {
         $data = getAllTags($request,$response,$args);
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
 
@@ -150,7 +154,7 @@ return function (App $app) {
     //----CATEGORIE----//
     $app->get('/categories', function (Request $request, Response $response, array $args) use ($container) {
         $data =  getAllCategories($response, $args);
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
     $app->post('/categories', function (Request $request, Response $response, array $args) use ($container) {
