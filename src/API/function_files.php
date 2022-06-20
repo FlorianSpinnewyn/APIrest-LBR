@@ -279,7 +279,6 @@ function getAllAllowedFiles($request, $response, $args)
         $sql .= ") LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
-    echo $sql;
 
     try {
         $db = new DB();
