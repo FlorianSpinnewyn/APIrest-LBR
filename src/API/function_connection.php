@@ -91,17 +91,17 @@ function passwordForgotten($request,$response,$args){
     }
 
 
+
 }
 
 
 
 function loginGoogle($request,$response,$args){
-    echo json_encode($request->getCookieParams()['auth._token.google']);
+
 
     $CLIENT_ID = "349453641732-i9fnplintku85hrcjuieaghqjqskq87q.apps.googleusercontent.com";
     $token = str_replace("Bearer ","",$request->getCookieParams()['auth._token.google']);
 
-    $accessToken = 'access token';
     $userDetails = file_get_contents('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $token);
     $userData = json_decode($userDetails);
 
@@ -159,10 +159,12 @@ function loginGoogle($request,$response,$args){
             $_SESSION['id'] = $user[0]->id_user;
             $_SESSION['mdpFinal'] = 1;
         }
+        return $response->withStatus(200)->getBody()->write("utilisateur connecte");
     }
     catch (PDOException $e) {
         echo '{"error": {"text": '.$e->getMessage().'}}';
     }
+    return $response->withStatus(400)->getBody()->write("utilisateur non trouve");
 }
 
 
