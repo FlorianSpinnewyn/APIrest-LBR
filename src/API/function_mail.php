@@ -17,14 +17,19 @@ function  SignUp($email, $mdp){
     mail($email, "Confirmation d'inscription",$message,$headers);
 }
 
-function forgetPassword($email,$pwd){
+function forgetPassword($email,$token){
 
     $message = '<html>
     <body style="background-color:#fffee6">
         <p>Bonjour,</p>
-        <p>Vous avez demandé à réinitialiser votre mot de passe.</p>
-        <p>Cliquez sur le bouton suivant pour réinitialiser votre mot de passe</p>
-        <button style="margin-left:22%;text-decoration: none;padding: 8px;font-family: arial;font-size: 1em;color: #FFFFFF;background-color: #ff0000;border-radius: 15px;-webkit-border-radius: 15px;-moz-border-radius: 15px;" href="#">Réinitialiser</button>
+        <p>Vous avez demande a reinitialiser votre mot de passe.</p>
+        <p>Cliquez sur le bouton suivant pour reinitialiser votre mot de passe</p>
+        <table>
+            <tbody>
+                <td><a style="color: red; text-decoration: underline; display: table-cell; text-align: center; height: 60px; width: 600px; vertical-align: middle;" href="http://localhost:3000/Mdp-Page?token='.$token.'" target="_blank" rel="noopener noreferrer">Reinitialiser<br>
+                 </a></td>
+            </tbody>
+        </table>
     </body>
 
 
