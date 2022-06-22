@@ -48,12 +48,20 @@ function getAllFiles($request,$response,$args) {
 
     if($ligne != null){
         $ligne = explode(" ", $ligne);
+
         $sql .= " (SELECT * FROM fichiers WHERE ";
+
         for($i = 0; $i < count($ligne); $i++){
+            if($ligne[$i] == ""){
+                continue;
+            }
             $sql .= "(nom_fichier LIKE '%".$ligne[$i]."%' OR date LIKE '%".$ligne[$i]."%' OR nom_prenom_auteur LIKE '%".$ligne[$i]."%')";
             if($i != count($ligne) - 1){
-                $sql .= " AND ";
+                $sql .= " OR ";
             }
+        }
+        if(str_ends_with($sql, " OR ")) {
+            $sql = substr_replace($sql, "", -4);
         }
         $sql .= ") INTERSECT ";
     }
@@ -211,15 +219,24 @@ function getAllAllowedFiles($request, $response, $args)
 
     if($ligne != null){
         $ligne = explode(" ", $ligne);
+
         $sql .= " (SELECT * FROM fichiers WHERE ";
+
         for($i = 0; $i < count($ligne); $i++){
-            $sql .= "(description LIKE '%".$ligne[$i]."%' OR nom_fichier LIKE '%".$ligne[$i]."%' OR date LIKE '%".$ligne[$i]."%' OR nom_prenom_auteur LIKE '%".$ligne[$i]."%')";
-            if($i != count($ligne) - 1){
-                $sql .= " AND ";
+            if($ligne[$i] == ""){
+                continue;
             }
+            $sql .= "(nom_fichier LIKE '%".$ligne[$i]."%' OR date LIKE '%".$ligne[$i]."%' OR nom_prenom_auteur LIKE '%".$ligne[$i]."%')";
+            if($i != count($ligne) - 1){
+                $sql .= " OR ";
+            }
+        }
+        if(str_ends_with($sql, " OR ")) {
+            $sql = substr_replace($sql, "", -4);
         }
         $sql .= ") INTERSECT ";
     }
+
 
 
 
