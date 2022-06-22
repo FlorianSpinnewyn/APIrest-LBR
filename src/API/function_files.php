@@ -839,3 +839,31 @@ function deleteFiles30day() {
         return ;
     }
 }
+
+
+function getStorage($request,$response, $args)
+{
+    $res = isAdmin($request, $response, $args);
+    if ($res) {
+        return $res;
+    }
+    $maxSpace = disk_free_space("../files");
+    $maxSpace = $maxSpace / pow(1024,3);
+    echo
+    $maxSpace = round($maxSpace, 2);
+
+
+    $usedSpace = disk_total_space("../files");
+    $usedSpace = $usedSpace / pow(1024,3);
+    $usedSpace = round($usedSpace, 2);
+
+
+    $response->getBody()->write(json_encode(array(
+        "stockageLeft" => $maxSpace,
+        "usedStockage" => $usedSpace
+    )));
+
+
+    return $response->withHeader('content-type', 'application/json')->withStatus(200);
+
+}

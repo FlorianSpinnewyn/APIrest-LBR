@@ -138,7 +138,9 @@ function loginGoogle($request,$response,$args){
 
         echo "Not logged In";
     }
-
+    if(explode($googleEmail, "@")[1] != "lesbriquesrouges.com"){
+        return $response->withStatus(400)->getBody()->write("Vous devez utiliser votre compte les-briques-rouges");
+    }
     $sql = "SELECT * FROM utilisateurs WHERE mail = '$googleEmail'";
     try {
         $db = new db();
