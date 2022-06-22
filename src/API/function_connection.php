@@ -64,7 +64,8 @@ function login($request,$response,$args){
 
 
 function passwordForgotten($request,$response,$args){
-    $mail = $request->getQueryParams('mail');
+    $mail = $request->getQueryParams('mail')['mail'];
+
     $sql = "SELECT * FROM utilisateurs WHERE mail = '$mail'";
 
     try{
@@ -73,22 +74,27 @@ function passwordForgotten($request,$response,$args){
         $stmt = $db->query($sql);
         $user = $stmt->fetchAll(PDO::FETCH_OBJ);
         $db = null;
-        if(!is_countable($user)){
+        if(!is_countable($user) || count($user) == 0){
 
             return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
         }
-        $user = $user[0];
-        $token = bin2hex(random_bytes(32));
-        $sql = "UPDATE utilisateurs SET token_mdp = '$token' WHERE id_user = '$user->id_user'";
+
+        $token = bin2hex(random_bytes(28));
+        echo $token;
+
+        $sql = "UPDATE utilisateurs SET token_mdp = '$token' WHERE id_user = '".$user[0]->id_user."'";
         $db = new db();
+        echo $sql;
         $db = $db->connect();
         $stmt = $db->query($sql);
         $db = null;
-
+        return $response->withStatus(200)->getBody()->write("token envoye");
     }
     catch(PDOException|Exception $e){
         echo '{"error": {"text": '.$e->getMessage().'}}';
     }
+    return $response->withStatus(400);
+
 
 
 }
@@ -96,12 +102,11 @@ function passwordForgotten($request,$response,$args){
 
 
 function loginGoogle($request,$response,$args){
-    echo json_encode($request->getCookieParams()['auth._token.google']);
+
 
     $CLIENT_ID = "349453641732-i9fnplintku85hrcjuieaghqjqskq87q.apps.googleusercontent.com";
     $token = str_replace("Bearer ","",$request->getCookieParams()['auth._token.google']);
 
-    $accessToken = 'access token';
     $userDetails = file_get_contents('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $token);
     $userData = json_decode($userDetails);
 
@@ -159,10 +164,12 @@ function loginGoogle($request,$response,$args){
             $_SESSION['id'] = $user[0]->id_user;
             $_SESSION['mdpFinal'] = 1;
         }
+        return $response->withStatus(200)->getBody()->write("utilisateur connecte");
     }
     catch (PDOException $e) {
         echo '{"error": {"text": '.$e->getMessage().'}}';
     }
+    return $response->withStatus(400)->getBody()->write("utilisateur non trouve");
 }
 
 
