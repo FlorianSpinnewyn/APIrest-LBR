@@ -187,6 +187,13 @@ function logout($request,$response,$args){
     session_unset();
     session_destroy();
     session_write_close();
+
+    //delete cookies from google auth
+    $params = session_get_cookie_params();
+
+    setcookie("auth._token_expiration.google", '', time() - 3600, $params['path'], $params['domain'], $params['secure'], isset($params['httponly']));
+
+
     addLog($request->getMethod(). " ".$request->getUri()->getPath(),200);
    return $response->withStatus(200)->withHeader('Content-type', 'application/json')->withHeader("Set-Cookie", "PHPSESSID=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT");
 
@@ -215,8 +222,6 @@ function isAdmin($request,$response,$args){
 
 function changePassword($request,$response,$args)
 {
-
-
     if($request->getParam("password") !=null and $request->getParam("token") !=  null){
         $token = $request->getParam("token");
 
@@ -233,7 +238,9 @@ function changePassword($request,$response,$args)
                 return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
             }
             $user = $user[0];
-            $sql = "UPDATE utilisateurs SET mdp = '" . $request->getParam("password") . "',token_mdp = NULL WHERE id_user = '$user->id_user'";
+            $password = $request->getParam("password");
+            $password = password_hash($password, PASSWORD_BCRYPT);
+            $sql = "UPDATE utilisateurs SET mdp = '" . $password . "',token_mdp = NULL WHERE id_user = '$user->id_user'";
 
             $db = new db();
             $db = $db->connect();

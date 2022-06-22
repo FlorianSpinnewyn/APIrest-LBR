@@ -54,7 +54,7 @@ return function (App $app) {
 
     $app->get('/files/{file}', function (Request $request, Response $response, array $args) use ($container) {
         $data = getFile($request,$response,$args);
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
 
@@ -65,7 +65,7 @@ return function (App $app) {
     });
     $app->get('/files/{file}/tags', function (Request $request, Response $response, array $args) use ($container) {
         $data = getFileTags($request,$response, $args);
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
 
