@@ -60,26 +60,26 @@ function getAllFiles($request,$response,$args) {
                     $sql .= ",";
                 }
             }
-            $sql .= ") GROUP BY fichiers.id_file";
+            $sql .= ") GROUP BY fichiers.id_file  ";
         }
     }
     else {
         if ($tags != null) {
-            $sql .=" SELECT nom_categorie FROM categories ";
+            $sql2 =" SELECT nom_categorie FROM categories ";
 
             try {
                 $DB = new DB();
                 $conn = $DB->connect();
 
-                $stmt = $conn->query($sql);
+                $stmt = $conn->query($sql2);
                 $categories = $stmt->fetchAll(PDO::FETCH_OBJ);
-                $sql = " SELECT * FROM tags ";
-                $stmt = $conn->query($sql);
+                $sql2 = " SELECT * FROM tags ";
+                $stmt = $conn->query($sql2);
                 $tagsList = $stmt->fetchAll(PDO::FETCH_OBJ);
 
 
                 if(is_countable($categories)){
-                    $sql = "";
+
                     for($i = 0; $i < count($categories); $i++){
                         $elements = false;
                         for($j = 0; $j < count($tagsList); $j++){
@@ -139,8 +139,6 @@ function getAllFiles($request,$response,$args) {
         $sql .= ") LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
-
-
 
     try {
         $db = new DB();
