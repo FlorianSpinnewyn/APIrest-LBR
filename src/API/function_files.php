@@ -44,6 +44,21 @@ function getAllFiles($request,$response,$args) {
         $sql .= "(SELECT * FROM fichiers WHERE type = '".$request->getQueryParam("extension")."') INTERSECT ";
     }
 
+    $ligne = $request->getQueryParam("searchBar");
+
+    if($ligne != null){
+        $ligne = explode(" ", $ligne);
+        $sql .= " (SELECT * FROM fichiers WHERE ";
+        for($i = 0; $i < count($ligne); $i++){
+            $sql .= "(nom_fichier LIKE '%".$ligne[$i]."%' OR date LIKE '%".$ligne[$i]."%' OR nom_prenom_auteur LIKE '%".$ligne[$i]."%')";
+            if($i != count($ligne) - 1){
+                $sql .= " AND ";
+            }
+        }
+        $sql .= ") INTERSECT ";
+    }
+
+
 
     if($request->getQueryParam("tagLess")=="true"){
         $sql .= " (SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)) INTERSECT ";
@@ -193,6 +208,23 @@ function getAllAllowedFiles($request, $response, $args)
     if($request->getQueryParam("sansTag")=="true"){
         $sql .= " (SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner) ) INTERSECT ";
     }
+
+    $ligne = $request->getQueryParam("searchBar");
+
+    if($ligne != null){
+        $ligne = explode(" ", $ligne);
+        $sql .= " (SELECT * FROM fichiers WHERE ";
+        for($i = 0; $i < count($ligne); $i++){
+            $sql .= "(description LIKE '%".$ligne[$i]."%' OR nom_fichier LIKE '%".$ligne[$i]."%' OR date LIKE '%".$ligne[$i]."%' OR nom_prenom_auteur LIKE '%".$ligne[$i]."%')";
+            if($i != count($ligne) - 1){
+                $sql .= " AND ";
+            }
+        }
+        $sql .= ") INTERSECT ";
+    }
+
+
+
 
     else if($request->getQueryParam("union")=="true") {
         $sql .= " SELECT fichiers.* FROM fichiers ";
