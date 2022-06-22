@@ -849,7 +849,7 @@ function getStorage($request,$response, $args)
     }
     $maxSpace = disk_free_space("../files");
     $maxSpace = $maxSpace / pow(1024,3);
-    echo
+
     $maxSpace = round($maxSpace, 2);
 
 
