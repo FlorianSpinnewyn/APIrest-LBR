@@ -1,6 +1,6 @@
 <?php
 
-
+//get all the categories
 function getAllCategories($response,$args){
     $sql ="SELECT nom_categorie FROM categories";
 
@@ -29,7 +29,7 @@ function getAllCategories($response,$args){
 
 function addCategorie( $request,$response,  $args)
 {
-    $res = authCategory($request,$response,$args);
+    $res = authCategory($request,$response,$args);  //check if the user is not a reader
     if($res ){
         return $res;
     }
@@ -59,7 +59,7 @@ function addCategorie( $request,$response,  $args)
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
 }
-
+//function that renames a category
 function renameCategorie($request,$response,$args){
     $res = authCategory($request,$response,$args);
     if($res ){
@@ -77,7 +77,7 @@ function renameCategorie($request,$response,$args){
         $conn = $DB->connect();
         $stmt = $conn->prepare($sql);
         $result = $stmt->execute();
-
+        //because category is a primary key, we need create a new one, associate the tag to the new category and delete the old one
         changeCategoryInTags($categorie,$newCategorie);
         deleteAncientCategorie($request,$response,$args);
         $DB = null;
@@ -98,6 +98,7 @@ function renameCategorie($request,$response,$args){
         ->withStatus(400);
 }
 
+//function that deletes a category that was changed
 function deleteAncientCategorie($request, $response, $args)
 {
     $categoryDel = $args["category"];
@@ -126,12 +127,13 @@ function deleteAncientCategorie($request, $response, $args)
         ->withStatus(400);
 }
 
-
+//function that deletes a category
 function deleteCategorie( $request,$response,  $args) {
     $res = authCategory($request,$response,$args);
     if($res ){
         return $res;
     }
+    //verify if the category is set
     if(!isset($args["category"])){
         $error = array(
             "message"=> "category not found"
@@ -141,6 +143,7 @@ function deleteCategorie( $request,$response,  $args) {
             ->withHeader('content-type', 'application/json')
             ->withStatus(404);
     }
+    //you can't delete categorie autre
     if($args["category"] == "autre"){
         $error = array(
             "message"=> "category autre can't be deleted"
@@ -158,7 +161,7 @@ function deleteCategorie( $request,$response,  $args) {
     try {
         $DB = new DB();
         $conn = $DB->connect();
-        deleteCategorieInTags($categoryDel);
+        deleteCategorieInTags($categoryDel); //delete the category in the tags table and set the tag's category to autre
         $stmt = $conn->prepare($sql);
         $result = $stmt->execute();
 

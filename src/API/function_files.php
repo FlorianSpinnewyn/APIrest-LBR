@@ -1,8 +1,9 @@
 <?php
 
 
-
+//Return all available files
 function getAllFiles($request,$response,$args) {
+    //check if user is logged
     $res = isSession($request,$response,$args);
 
     if($res){
@@ -12,6 +13,7 @@ function getAllFiles($request,$response,$args) {
     $tags = $request->getQueryParam("tag");
     $sql = "";
 
+    //check if the user is a guest
     if($_SESSION['role'] == 0){
 
         $data = getAllAllowedFiles($request,$response,$args);
@@ -27,12 +29,17 @@ function getAllFiles($request,$response,$args) {
                 ->withStatus(404);
         }
     }
+
     if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
         $sql .= "(";
     }
+
+    //select only the files that are assigned to the user
     if($request->getQueryParam("mine")=="true"){
         $sql .= "SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
     }
+
+    //select only the files that are are in the bin
     if($request->getQueryParam("deleted")=="true"){
         deleteFiles30day();
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NOT NULL) INTERSECT ";
@@ -40,12 +47,14 @@ function getAllFiles($request,$response,$args) {
     else{
         $sql .= "(SELECT * FROM fichiers WHERE fichiers.date_supr IS NULL) INTERSECT ";
     }
+    //select only the files with a specific extension
     if($request->getQueryParam("extension") != null){
         $sql .= "(SELECT * FROM fichiers WHERE type = '".$request->getQueryParam("extension")."') INTERSECT ";
     }
 
     $ligne = $request->getQueryParam("searchBar");
 
+    //select only the files that match the search bar
     if($ligne != null){
         $ligne = explode(" ", $ligne);
 
@@ -67,11 +76,12 @@ function getAllFiles($request,$response,$args) {
     }
 
 
-
+    //select only the files doesn't have tags
     if($request->getQueryParam("tagLess")=="true"){
         $sql .= " (SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner)) INTERSECT ";
     }
 
+    //select the files depending on the tags with an union
     else if($request->getQueryParam("union")=="true") {
         $sql .= " SELECT fichiers.* FROM fichiers ";
 
@@ -86,7 +96,7 @@ function getAllFiles($request,$response,$args) {
             $sql .= ") GROUP BY fichiers.id_file  ";
         }
     }
-    else {
+    else { //select the files depending on the tags with an intersect
         if ($tags != null) {
             $sql2 =" SELECT nom_categorie FROM categories ";
 
@@ -158,11 +168,14 @@ function getAllFiles($request,$response,$args) {
     if(str_ends_with($sql, "INTERSECT ")){
         $sql = substr_replace($sql ,"", -10);
     }
+
+    //limit the number of file and define the offset
     if($request->getQueryParam('limit') != null AND $request->getQueryParam('offset') != null){
         $sql .= ") LIMIT ".$request->getQueryParam('limit');
         $sql .= " OFFSET ".$request->getQueryParam('offset');
     }
 
+    //query the database
     try {
         $db = new DB();
         $conn = $db->connect();
@@ -186,18 +199,22 @@ function getAllFiles($request,$response,$args) {
         ->withStatus(400);
 }
 
-
+//get all the files for guest
 function getAllAllowedFiles($request, $response, $args)
 {
     $user = $_SESSION['id'];
     $tags = $request->getQueryParam("tag");
     $sql = "";
 
+
     if($request->getQueryParam('limit')!= null AND $request->getQueryParam('offset') != null){
         $sql .= "(";
     }
+    //get the allowed tags, then intersect it with the other parameters
     $sql .= "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT";
 
+
+    //same as getAllFiles
     if($request->getQueryParam("mine")=="true"){
         $sql .= " SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
     }
@@ -236,9 +253,6 @@ function getAllAllowedFiles($request, $response, $args)
         }
         $sql .= ") INTERSECT ";
     }
-
-
-
 
 
     else if($request->getQueryParam("union")=="true") {
@@ -353,14 +367,14 @@ function getAllAllowedFiles($request, $response, $args)
 
 }
 
-
+//get file by id
 function getFile($request,$response, $args){
-
+    //check if user is logged in
     $res = isSession($request,$response,$args);
     if($res ){
         return $res;
     }
-
+    //check if user is as guest
     if($_SESSION['role'] == 0){
         return getAllowedFile($request,$response,$args);
     }
@@ -390,7 +404,7 @@ function getFile($request,$response, $args){
                 // Get file size.
                 $filesize = filesize($download_file);
                 //get file type
-
+                //define the headers and read the file to send
                 // Download file.
                 header("Content-Type: ".explode('.',$file->type)[0]);
                 header("Content-Length: " . $filesize);
@@ -422,11 +436,11 @@ function getFile($request,$response, $args){
         ->withStatus(400);
 }
 
-
+//get file for guest
 function getAllowedFile($request,$response, $args){
     $id_file = $args['file'];
     $user = $_SESSION['id'];
-
+    //same but with restricted access
     $sql = "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))";
     try {
         $db = new DB();
@@ -496,8 +510,9 @@ function getAllowedFile($request,$response, $args){
 
 }
 
-
+//function that add file to server and database
 function addFile( $request,$response,  $args) {
+    //check if user is logged in and is not a reader
     $res = authFilesTags($request,$response,$args);
 
     if($res ){
@@ -515,7 +530,7 @@ function addFile( $request,$response,  $args) {
     $date = $request->getParam("date");
     $str = $_FILES['file']['type']  . $type;
 
-
+    //check if the file is a valid file
     if($_FILES ['file']['error'] > 0){
         $error = array(
             "message"=> "Erreur lors du transfert"
@@ -525,6 +540,7 @@ function addFile( $request,$response,  $args) {
             ->withHeader('content-type', 'application/json')
             ->withStatus(400);
     }
+    //check if the file is not over the size limit
     if($_FILES['file']['size'] > 1073741824){
         $error = array(
             "message"=> "Fichier trop volumineux"
@@ -545,8 +561,8 @@ function addFile( $request,$response,  $args) {
             ->withHeader('content-type', 'application/json')
             ->withStatus(400);
     }
-
-    if($_FILES["file"]["type"] == "video/mpeg" || $_FILES["file"]["type"] == "video/avi" || $_FILES["file"]["type"] == "video/quicktime"|| $_FILES["file"]["type"] == "video/mov" || $_FILES['file']['type'] == "video/mp4"){
+    //define the lenght of the video
+    if($_FILES["file"]["type"] == "video/mpeg" || $_FILES["file"]["type"] == "video/avi" || $_FILES["file"]["type"] == "video/quicktime"|| $_FILES["file"]["type"] == "video/mov" || $_FILES['file']['type'] == "video/mp4" || $_FILES['file']['type'] == "audio/mpeg"|| $_FILES['file']['type'] =="audio/wav"){
         $getID3 = new getID3;
         $ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
         $duree = floor($ThisFileInfo['playtime_seconds']);
@@ -575,7 +591,7 @@ function addFile( $request,$response,  $args) {
 
         $db = null;
         $response->getBody()->write(json_encode($result));
-
+        //move the file in the files folder
         move_uploaded_file($_FILES['file']['tmp_name'], "../files/". $conn->lastInsertId().$type);
 
 
@@ -596,9 +612,10 @@ function addFile( $request,$response,  $args) {
         ->withStatus(400);
 }
 
-
+//function that add tags to a file
 function addFileTags( $request,$response,  $args)
 {
+    //check if user is logged in and is not a reader
     $res = authFilesTags($request,$response,$args);
     if($res ){
         return $res;
@@ -607,13 +624,14 @@ function addFileTags( $request,$response,  $args)
 
     $fichier = $args['file'];
     $tags = $request->getParam("tags");
+    //check if the user has access to the file
     $res2 = checkIfOwnedFile($request,$response,$args);
     if($res2 ){
         return $res2;
     }
 
 
-
+    //for each tags, add them to the database
     for($i = 0;$i < count($tags);$i++) {
         $sql = "INSERT INTO assigner (id_tag,id_file) VALUES ($tags[$i],'$fichier')";
 
@@ -625,8 +643,7 @@ function addFileTags( $request,$response,  $args)
             $result = $stmt->execute();
 
             $DB = null;
-            //$response->getBody()->write(json_encode($result));
-            //return $response->withHeader('content-type', 'application/json')->withStatus(200);
+
         } catch (PDOException $e) {
             $error = array(
                 "message" => $e->getMessage()
@@ -639,12 +656,13 @@ function addFileTags( $request,$response,  $args)
     return $response->withHeader('content-type', 'application/json')->withStatus(200);
 }
 
+// returns the tags of a file
 function getFileTags($request,$response, $args){
     $fichier = $args['file'];
-    $res = isSession($request,$response, $args);
+    $res = isSession($request,$response, $args); //check if user is logged in
     if($res)
         return $res;
-    $res2 = checkIfOwnedFile($request,$response,$args);
+    $res2 = checkIfOwnedFile($request,$response,$args); //check if user has access to the file
     if($res2 ){
         return $res2;
     }
@@ -672,18 +690,18 @@ function getFileTags($request,$response, $args){
 
 
 function deleteFileTags( $request,$response, $args){
-    $res = authFilesTags($request,$response,$args);
+    $res = authFilesTags($request,$response,$args); //check if user is logged in
     if($res ){
         return $res;
     }
     $fichier = $args['file'];
     $tags = $request->getParam("tags");
 
-    $res2 = checkIfOwnedFile($request,$response,$args);
+    $res2 = checkIfOwnedFile($request,$response,$args); //check if user has access to the file
     if($res2 ){
         return $res2;
     }
-
+    //for each tags, delete them to the database
     for($i = 0;$i < count($tags);$i++) {
         $sql = "DELETE from assigner where (id_file = '$fichier' AND id_tag = $tags[$i])";
 
@@ -695,8 +713,7 @@ function deleteFileTags( $request,$response, $args){
             $result = $stmt->execute();
 
             $DB = null;
-            //$response->getBody()->write(json_encode($result));
-            //return $response->withHeader('content-type', 'application/json')->withStatus(200);
+
         } catch (PDOException $e) {
             $error = array(
                 "message" => $e->getMessage()
@@ -704,22 +721,21 @@ function deleteFileTags( $request,$response, $args){
             $response->getBody()->write(json_encode($error));
             return $response->withHeader('content-type', 'application/json')->withStatus(400);
         }
-        //$response->getBody()->write(json_encode($error));
-        //return $response->withHeader('content-type', 'application/json')->withStatus(400);
 
     }
     return $response->withHeader('content-type', 'application/json')->withStatus(200);
 }
 
 
+//function that delete a file and also all the tags associated to it
 function deleteFile( $request,$response,  $args) {
 
-    $res = authFilesTags($request,$response,$args);
+    $res = authFilesTags($request,$response,$args); //check if user is logged in
     if($res ){
         return $res;
     }
 
-    $res2 = checkIfOwnedFile($request,$response,$args);
+    $res2 = checkIfOwnedFile($request,$response,$args); //check if user has access to the file
     if($res2 ){
         return $res2;
     }
@@ -735,7 +751,7 @@ function deleteFile( $request,$response,  $args) {
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
+        //if the file is not in the bin, put it in
         if($result['date_supr'] == null){
             $sql = "UPDATE fichiers SET date_supr = '$date' WHERE id_file = '$fileDelete'";
             $stmt = $conn->prepare($sql);
@@ -745,12 +761,12 @@ function deleteFile( $request,$response,  $args) {
                 ->withHeader('content-type', 'application/json')
                 ->withStatus(200);
         }
-        else{
+        else{//if the file is in the bin, delete it
             $sql = "DELETE from fichiers WHERE id_file = '$fileDelete'";
             $stmt = $conn->prepare($sql);
             $stmt->execute();
             $DB = null;
-            deleteFileInTags($fileDelete);
+            deleteFileInTags($fileDelete); //delete the tags associated to the file
             unlink("../files/".$fileDelete.explode(".",$result['type'])[1]);
             return $response
                 ->withHeader('content-type', 'application/json')
@@ -773,7 +789,7 @@ function deleteFile( $request,$response,  $args) {
         ->withStatus(400);
 }
 
-
+//function that delete all the tags associated to a file
 function deleteTagInFiles($tag){
 
     $sql ="DELETE FROM assigner WHERE id_tag='$tag'";
@@ -794,7 +810,7 @@ function deleteTagInFiles($tag){
     }
 }
 
-
+//function that remove a deleted user from the file table
 function deleteUserInFiles($user){
     $sql ="UPDATE fichiers SET id_user= 1 WHERE id_user=$user";
     try {
@@ -813,6 +829,7 @@ function deleteUserInFiles($user){
     }
 }
 
+// stream the file to the client
 function stream($request,$response, $args)
 {
     $file = $args['file'];
@@ -821,7 +838,7 @@ function stream($request,$response, $args)
     $stream->start();
 }
 
-
+//function that check if the file should be deleted (it was put in the bin 30days ago)
 function deleteFiles30day() {
     $sql="DELETE FROM fichiers WHERE DATEDIFF(NOW(),date_supr)>0";
     try {
@@ -838,24 +855,26 @@ function deleteFiles30day() {
     }
 }
 
-
+//get all the storage values
 function getStorage($request,$response, $args)
 {
+    //check if user is admin
     $res = isAdmin($request, $response, $args);
     if ($res) {
         return $res;
     }
+    //check for storage available
     $maxSpace = disk_free_space("../files");
     $maxSpace = $maxSpace / pow(1024,3);
 
     $maxSpace = round($maxSpace, 2);
 
-
+    //get the current space used
     $usedSpace = disk_total_space("../files");
     $usedSpace = $usedSpace / pow(1024,3);
     $usedSpace = round($usedSpace, 2);
 
-
+    //create a json object with the values
     $response->getBody()->write(json_encode(array(
         "stockageLeft" => $maxSpace,
         "usedStockage" => $usedSpace

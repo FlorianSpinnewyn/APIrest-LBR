@@ -1,12 +1,10 @@
 <?php
 
-
+//get all the users
 function getUsersAll($request,$response,$args) {
     $sql ="SELECT id_user,mail,role FROM utilisateurs";
 
-
-
-    $res = isAdmin($request,$response,$args);
+    $res = isAdmin($request,$response,$args); //check if the user is an admin
     if($res){
         addLog($request->getMethod(). " ".$request->getUri()->getPath(),$res->getStatusCode());
         return $res;
@@ -36,7 +34,7 @@ function getUsersAll($request,$response,$args) {
         ->withHeader('content-type', 'application/json')
         ->withStatus(400);
 }
-
+//get a specific user by id
 function getUser($request,$response,  $args){
     $res = isSession($request, $response, $args);
     if ($res) {
@@ -76,6 +74,7 @@ function getUser($request,$response,  $args){
 
 }
 
+//add a new user and send an email to the user  with his credentials
 function addUser( $request,$response,  $args) {
     $res = isAdmin($request,$response,  $args);
     if($res ){
@@ -85,7 +84,7 @@ function addUser( $request,$response,  $args) {
     $mail=$request->getParam("mail");
     $nom_prenom=$request->getParam("name_surname");
     $mdp=$request->getParam("password");
-    $mdp = password_hash($mdp, PASSWORD_BCRYPT);
+    $mdp = password_hash($mdp, PASSWORD_BCRYPT); //hash the password
 
     $descriptif=$request->getParam("description");
     $role=$request->getParam("role");
@@ -99,8 +98,9 @@ function addUser( $request,$response,  $args) {
 
         $conn = $DB->connect();
         $stmt = $conn->query($sqlVerif);
-        $file = $stmt->fetch(PDO::FETCH_OBJ);
-        if($file) {
+        $user = $stmt->fetch(PDO::FETCH_OBJ);
+        //if the mail already exists
+        if($user) {
             return $response->withStatus(400)->withHeader('content-type', 'application/json')->getBody()->write("Mail deja utilisé");
         }
 
@@ -114,20 +114,18 @@ function addUser( $request,$response,  $args) {
         $response->getBody()->write(json_encode($result));
 
         $id_user = $conn->lastInsertId();
-
+        //add all the allowed tags to the user
         addAllowedTagToUser2($id_user, $request,$response,  $args);
         $headers = array(
             'From' => 'drivelbr@test-mail.lesbriquesrouges.fr',
             'X-Mailer' => 'PHP/' . phpversion()
         );;
-
+        //send an email to the user with his credentials
         if($mdpFinal == 1){
             finalSignUp($mail,$request->getParam("password"));
         }else{
             SignUp($mail,$request->getParam("password"));
         }
-       // mail("elliott.vanwormhoudt@student.junia.com","Inscription","Vous venez de vous inscrire. Votre identifiant est $mail et votre mot de passe est $mdp. Vous pouvez vous connecter sur le site en utilisant ces identifiants.<a href ='http://www.example.com'>Veuillez confirmer votre email</a> ",$headers);
-
         $DB = null;
         addLog($request->getMethod(). " ".$request->getUri()->getPath(),201);
         return $response
@@ -144,7 +142,7 @@ function addUser( $request,$response,  $args) {
 
 }
 
-
+//update a user
 function updateUser($request,$response,$args){
     $res = isAdmin($request,$response,  $args);
     if($res ){
@@ -170,7 +168,7 @@ function updateUser($request,$response,$args){
     }
 ;
 
-
+    //define what should be updated
     $sql ="UPDATE `utilisateurs` SET";
      if($request->getParam("mail")){
         $sql.=" `mail` = '".$request->getParam("mail")."',";
@@ -224,7 +222,7 @@ function updateUser($request,$response,$args){
         ->withStatus(400);
 }
 
-
+//delete a user and all his info related to him
 function deleteUser( $request,$response,  $args) {
     $res = isAdmin($request,$response,  $args);
     if($res ){
@@ -236,6 +234,7 @@ function deleteUser( $request,$response,  $args) {
     $sql ="DELETE from utilisateurs WHERE id_user = $userDel";
 
     try {
+
         deleteUserInTags($userDel,$response);
         deleteUserInFiles($userDel);
         $DB = new DB();
@@ -263,6 +262,7 @@ function deleteUser( $request,$response,  $args) {
         ->withStatus(400);
 }
 
+//add  tags to a user
 function addAllowedTagToUser($request,$response,$args){
     $res = isAdmin($request,$response,  $args);
     if($res ){
@@ -304,6 +304,7 @@ function addAllowedTagToUser($request,$response,$args){
 
 }
 
+//get the allowed tags of a user
 function getAllowedTags($request,$response,$args){
 
     $user = $_SESSION["id"];
@@ -328,6 +329,8 @@ function getAllowedTags($request,$response,$args){
     }
 }
 
+
+//remove a tag from a user
 function removeAllowedTagToUser($request,$response,$args)
 {
     $res = isAdmin($request, $response, $args);
@@ -415,6 +418,9 @@ function deleteTagsInUsers($tag){
     }
 }
 
+
+//function that returns the data of your current session
+// that means if your password if final, your role and your id
 function getYourData($request,$response,$args)
 {
     $res = isSession($request, $response, $args);

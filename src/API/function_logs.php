@@ -1,6 +1,11 @@
 <?php
 
+//function that get the logs of the server
 function getLog($request,$response,$args){
+    $res = isAdmin($request,$response,$args);  //check if the user is an admin
+    if($res ){
+        return $res;
+    }
     $sql ="SELECT * FROM log";
 
     try {
@@ -26,7 +31,7 @@ function getLog($request,$response,$args){
         ->withStatus(400);
 }
 
-
+//function that add the logs depending on the uri, the method,the status and the user if logged
 function addLog($type,$status){
     $date =  date("Y-m-d H:i:s");
     if(isset($_SESSION['id'])) {
