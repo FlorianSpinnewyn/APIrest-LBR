@@ -132,17 +132,16 @@ function isAlreadyExist(mixed $nom_tag, mixed $id_user, mixed $nom_categorie)
         $stmt = $conn->query($sql);
         $files = $stmt->fetchAll(PDO::FETCH_OBJ);
         $DB = null;
-        if(count($files) > 0){
+        if(is_countable($files)  and count($files) > 0){
             return true;
         }
-
+        return false;
         }
     catch (PDOException $e) {
         $error = array(
             "message"=> $e->getMessage()
         );
     }
-    return false;
 }
 
 
@@ -173,7 +172,7 @@ function deleteTag( $request,$response,  $args) {
         $DB = null;
         $response->getBody()->write(json_encode($result));
         deleteTagInFiles($tagDelete);
-        deleteTagsInUsers($tagDelete);
+            deleteTagsInUsers($tagDelete);
         return $response
             ->withHeader('content-type', 'application/json')
             ->withStatus(200);
@@ -203,6 +202,33 @@ function modifyTag( $request,$response, $args) {
     $tag = $args["tag"];
     $selection =$request->getParam("selection");
     $modif = $request->getParam("modif");
+
+    if($selection == "nom_categorie"){
+        $sql ="Select nom_tag from tags where id_tag = $tag";
+        try {
+            $DB = new DB();
+            $conn = $DB->connect();
+            $stmt = $conn->query($sql);
+            $nomTag = $stmt->fetchAll(PDO::FETCH_OBJ);
+            $DB = null;
+
+            if(isAlreadyExist($nomTag[0]->nom_tag,"test",$modif)) {
+                $error = array(
+                    "message" => "Tag already exist"
+                );
+                $response->getBody()->write(json_encode($error));
+                return $response
+                    ->withHeader('content-type', 'application/json')
+                    ->withStatus(400);
+            }
+        }catch (PDOException $e) {
+            $error = array(
+                "message"=> $e->getMessage()
+            );
+        }
+
+
+        }
 
     $sql ="UPDATE tags SET $selection= '$modif' WHERE id_tag=$tag";
 
@@ -264,7 +290,9 @@ function deleteUserInTags($user,$response){
 
 
 function deleteCategorieInTags($categorie){
-    $sql ="UPDATE tags SET nom_categorie = 'autre' WHERE nom_categorie='$categorie'";
+
+    $sql ="UPDATE tags SET nom_categorie = 'autre' WHERE nom_categorie='$categorie' and nom_tag not IN (SELECT nom_tag FROM tags WHERE nom_categorie = 'autre');
+    DELETE FROM tags WHERE nom_categorie = '$categorie' ;";
     try {
         $DB = new DB();
         $conn = $DB->connect();

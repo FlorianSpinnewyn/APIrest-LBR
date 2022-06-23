@@ -151,7 +151,7 @@ return function (App $app) {
     //return the storage values
     $app->get('/storage', function (Request $request, Response $response, array $args) use ($container) {
         $data = getStorage($request,$response,$args);
-        addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
 

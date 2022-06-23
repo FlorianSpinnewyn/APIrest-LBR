@@ -547,11 +547,9 @@ function addFile( $request,$response,  $args) {
     }
 
     if($_FILES["file"]["type"] == "video/mpeg" || $_FILES["file"]["type"] == "video/avi" || $_FILES["file"]["type"] == "video/quicktime"|| $_FILES["file"]["type"] == "video/mov" || $_FILES['file']['type'] == "video/mp4"){
-         //$getID3 = new getID3;
-
-        //$ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
-
-       // $duree = floor($ThisFileInfo['playtime_seconds']);
+        $getID3 = new getID3;
+        $ThisFileInfo = $getID3->analyze($_FILES['file']['tmp_name']);
+        $duree = floor($ThisFileInfo['playtime_seconds']);
     }
 
 
