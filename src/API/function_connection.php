@@ -5,7 +5,6 @@ function login($request,$response,$args){
     $mail = $request->getParam("mail");
     $password = $request->getParam("password");
 
-    echo "test1";
 
     $sql = "SELECT * FROM utilisateurs";
     try{
