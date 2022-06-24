@@ -15,7 +15,7 @@ require __DIR__ . '/../dataBaseAcces.php';
 require __DIR__ . '/function_mail.php';
 
 
-
+//routing file for the API
 return function (App $app) {
     $container = $app->getContainer();
 

@@ -40,3 +40,36 @@ function forgetPassword($email,$token){
         'X-Mailer: PHP/' . phpversion();
     mail($email, 'Demande de réinitialisation de mot de passe', $message,$headers);
 }
+
+function sendMailAdmin($mail){
+    $sql ="SELECT id_user,mail FROM utilisateurs where role = 3";
+
+    try{
+        $db = new db();
+        $db = $db->connect();
+        $stmt = $db->query($sql);
+        $user = $stmt->fetchAll(PDO::FETCH_OBJ);
+        $db = null;
+        if(is_countable($user)) {
+            $emailAdmin = $user[0]->mail;
+            $message = '<html>
+            <body style="background-color:#fffee6">
+                <p>Bonjour,</p>
+                <p>Un nouveau compte a été créé avec l"adresse email suivante :</p>
+                <p>'.$mail.'</p>
+                <p>Vous pouvez dès à présent modifier les paramètres de ce compte</p>
+            </body>
+             </html>';
+            $message = wordwrap($message, 70, "\r\n");
+            $headers = "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= 'From: LBR | Drive <no-reply@lesbriquesrouges.fr>' . "\r\n" .
+                'X-Mailer: PHP/' . phpversion();
+            mail($emailAdmin, 'Nouveau compte créé', $message,$headers);
+        }
+    }catch (PDOException $e) {
+        $error = array(
+            "message"=> $e->getMessage()
+        );
+    }
+
+}

@@ -1,13 +1,11 @@
 <?php
 
-
+//login the user and create a session associated to it
 function login($request,$response,$args){
     $mail = $request->getParam("mail");
     $password = $request->getParam("password");
 
-
-    //remove the Bearer from the cookie auth._token.google
-
+    echo "test1";
 
     $sql = "SELECT * FROM utilisateurs";
     try{
@@ -18,6 +16,7 @@ function login($request,$response,$args){
         $db = null;
 
         $userFound = false;
+        //check for every user if the password is correct
         for($i=0;$i<count($user);$i++){
             if($user[$i]->mail == $mail ){
                 $userFound = true;
@@ -48,10 +47,12 @@ function login($request,$response,$args){
                 }
             }
         }
+        //if the user is not found
         if(!$userFound){
             addLog($request->getMethod(). " ".$request->getUri()->getPath(),404);
             return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
         }
+        //if the password is not correct
         addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
         $response->getBody()->write("Mauvais identifiants");
         return $response->withStatus(400);
@@ -62,7 +63,7 @@ function login($request,$response,$args){
     }
 }
 
-
+//reset your password by sending you email and keeping a token in the database
 function passwordForgotten($request,$response,$args){
     $mail = $request->getQueryParams('mail')['mail'];
 
@@ -74,11 +75,12 @@ function passwordForgotten($request,$response,$args){
         $stmt = $db->query($sql);
         $user = $stmt->fetchAll(PDO::FETCH_OBJ);
         $db = null;
+        //if the user is not found
         if(!is_countable($user) || count($user) == 0){
 
             return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
         }
-
+        //create a random token
         $token = bin2hex(random_bytes(28));
         echo $token;
 
@@ -88,6 +90,7 @@ function passwordForgotten($request,$response,$args){
         $db = $db->connect();
         $stmt = $db->query($sql);
         $db = null;
+        forgetPassword($mail,$token);
         return $response->withStatus(200)->getBody()->write("token envoye");
     }
     catch(PDOException|Exception $e){
@@ -100,7 +103,7 @@ function passwordForgotten($request,$response,$args){
 }
 
 
-
+//login and create session, but using google auth
 function loginGoogle($request,$response,$args){
 
 
@@ -138,8 +141,9 @@ function loginGoogle($request,$response,$args){
 
         echo "Not logged In";
     }
+    //check if the mail is lesbriquesrouges.com, if not, prevent from connecting
     if(explode($googleEmail, "@")[1] != "lesbriquesrouges.com"){
-        return $response->withStatus(400)->getBody()->write("Vous devez utiliser votre compte les-briques-rouges");
+        //return $response->withStatus(400)->getBody()->write("Vous devez utiliser votre compte les-briques-rouges");
     }
     $sql = "SELECT * FROM utilisateurs WHERE mail = '$googleEmail'";
     try {
@@ -153,6 +157,7 @@ function loginGoogle($request,$response,$args){
             $db = new db();
             $db = $db->connect();
             $stmt = $db->query($sql);
+            sendMailAdmin($googleEmail);
             $db = null;
         }
         else{
@@ -174,7 +179,7 @@ function loginGoogle($request,$response,$args){
     return $response->withStatus(400)->getBody()->write("utilisateur non trouve");
 }
 
-
+//logout, destroy session and remove google cookie
 function logout($request,$response,$args){
 
     $res = isSession($request,$response,$args);
@@ -199,6 +204,7 @@ function logout($request,$response,$args){
 
 }
 
+//check if the user is admin
 function isAdmin($request,$response,$args){
     $res = isSession($request,$response,$args);
 
@@ -219,9 +225,10 @@ function isAdmin($request,$response,$args){
 
 }
 
-
+//change your password, from the token or from the compte page
 function changePassword($request,$response,$args)
 {
+    //check for the token in the url
     if($request->getParam("password") !=null and $request->getParam("token") !=  null){
         $token = $request->getParam("token");
 
@@ -233,10 +240,12 @@ function changePassword($request,$response,$args)
             $stmt = $db->query($sql);
             $user = $stmt->fetchAll(PDO::FETCH_OBJ);
             $db = null;
+            //verify if the token is valid and if you find an user
             if (!is_countable($user)) {
 
                 return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
             }
+            //update the new password
             $user = $user[0];
             $password = $request->getParam("password");
             $password = password_hash($password, PASSWORD_BCRYPT);
@@ -262,7 +271,7 @@ function changePassword($request,$response,$args)
     if ($res )
         return $res;
 
-
+    //if the user is logged in and the password is not null, change the password
     $password = $request->getParam("password");
     $password = password_hash($password, PASSWORD_BCRYPT);
     $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$_SESSION[id]'";
@@ -278,7 +287,7 @@ function changePassword($request,$response,$args)
     }
     return $response;
 }
-
+//auth for adding the files and the tags
 function authFilesTags($request, $response, $args){
 
     $res = isSession($request,$response,$args);
@@ -297,6 +306,7 @@ function authFilesTags($request, $response, $args){
     return 0;
 }
 
+//auth for category
 function authCategory($request, $response, $args){
 
     $res = isSession($request,$response,$args);
@@ -318,7 +328,7 @@ function authCategory($request, $response, $args){
 
 
 
-
+//check if the user has a session
 function isSession($request,$response,$args){
     session_start([
         'use_only_cookies' => 1,
@@ -330,7 +340,9 @@ function isSession($request,$response,$args){
     if(session_id() == '' || !isset($_SESSION)||!isset($_SESSION['id']) || session_status() === PHP_SESSION_NONE) {
 
         $params = session_get_cookie_params();
+
         setcookie(session_name(), '', 0, $params['path'], $params['domain'], $params['secure'], isset($params['httponly']));
+        //destroy the session and redirect to the login page
         session_unset();
         session_destroy();
         session_write_close();
@@ -347,7 +359,7 @@ function isSession($request,$response,$args){
 }
 
 
-
+//check if the user can modify the file or see the file
 function checkIfOwnedFile($request,$response,$args){
     $fichier = $args['file'];
     if($_SESSION['role'] == 1)
@@ -399,6 +411,7 @@ function checkIfOwnedFile($request,$response,$args){
     return 0;
 }
 
+//check if the user can have access to the  tags
 function checkIfOwnedTag($request,$response,$args){
     $tag = $args['tag'];
     if($_SESSION['role']== 0){
