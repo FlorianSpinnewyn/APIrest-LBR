@@ -3,8 +3,10 @@
 //login the user and create a session associated to it
 function login($request,$response,$args){
     $mail = $request->getParam("mail");
-    $password = $request->getParam("password");
 
+    //return $response->withStatus(200)->write(json_encode(file_get_contents('php://input')));
+
+    $password = $request->getParam("password");
 
     $sql = "SELECT * FROM utilisateurs";
     try{
@@ -49,7 +51,9 @@ function login($request,$response,$args){
         //if the user is not found
         if(!$userFound){
             addLog($request->getMethod(). " ".$request->getUri()->getPath(),404);
-            return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
+            $response->withHeader('Access-Control-Allow-Origin', '*')->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+            return $response->withStatus(404)->getBody()->write($mail." n'existe pas");
+
         }
         //if the password is not correct
         addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
