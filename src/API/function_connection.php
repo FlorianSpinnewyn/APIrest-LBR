@@ -251,12 +251,14 @@ function changePassword($request,$response,$args)
             //update the new password
             $user = $user[0];
             $password = $request->getParam("password");
+
             $password = password_hash($password, PASSWORD_BCRYPT);
             $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$user->id_user';UPDATE utilisateurs SET token_mdp = NULL WHERE id_user = '$user->id_user';UPDATE utilisateurs SET mdpFinal = 1 WHERE id_user = '$user->id_user'";
 
             $db = new db();
             $db = $db->connect();
             $stmt = $db->query($sql);
+            $user = $stmt->fetchAll(PDO::FETCH_OBJ);
             $db = null;
             return $response->withStatus(200)->getBody()->write("Mot de passe changé");
         }
