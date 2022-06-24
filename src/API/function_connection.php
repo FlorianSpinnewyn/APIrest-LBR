@@ -278,7 +278,7 @@ function changePassword($request,$response,$args)
     //if the user is logged in and the password is not null, change the password
     $password = $request->getParam("password");
     $password = password_hash($password, PASSWORD_BCRYPT);
-    $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$_SESSION[id]'";
+    $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$_SESSION[id]'; UPDATE utilisateurs SET mdpFinal = 1 WHERE id_user = '$_SESSION[id]'";
     try{
         $db = new db();
         $db = $db->connect();
