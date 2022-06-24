@@ -172,7 +172,7 @@ function loginGoogle($request,$response,$args){
             ]);
             $_SESSION['role'] = $user[0]->role;
             $_SESSION['id'] = $user[0]->id_user;
-            $_SESSION['mdpFinal'] = 1;
+            $_SESSION['mdpFinal'] = $user[0]->mdpFinal;
         }
         return $response->withStatus(200)->getBody()->write("utilisateur connecte");
     }
