@@ -30,7 +30,6 @@ function login($request,$response,$args){
                     ]);
                     $_SESSION['role'] = $user[$i]->role;
                     $_SESSION['id'] = $user[$i]->id_user;
-                    $_SESSION['mdpFinal'] = true;
                     if($user[$i]->mdpFinal == 0)
                     {
                         $_SESSION['mdpFinal'] = false;
@@ -253,7 +252,7 @@ function changePassword($request,$response,$args)
             $user = $user[0];
             $password = $request->getParam("password");
             $password = password_hash($password, PASSWORD_BCRYPT);
-            $sql = "UPDATE utilisateurs SET mdp = '" . $password . "',token_mdp = NULL WHERE id_user = '$user->id_user'";
+            $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$user->id_user';UPDATE utilisateurs SET token_mdp = NULL WHERE id_user = '$user->id_user';UPDATE utilisateurs SET mdpFinal = 1 WHERE id_user = '$user->id_user'";
 
             $db = new db();
             $db = $db->connect();
