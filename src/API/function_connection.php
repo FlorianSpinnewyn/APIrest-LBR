@@ -30,6 +30,7 @@ function login($request,$response,$args){
                     ]);
                     $_SESSION['role'] = $user[$i]->role;
                     $_SESSION['id'] = $user[$i]->id_user;
+                    $_SESSION['mdpFinal'] = true;
                     if($user[$i]->mdpFinal == 0)
                     {
                         $_SESSION['mdpFinal'] = false;

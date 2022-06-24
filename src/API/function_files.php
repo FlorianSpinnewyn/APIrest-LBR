@@ -214,6 +214,7 @@ function getAllAllowedFiles($request, $response, $args)
     $sql .= "((SELECT fichiers.* FROM fichiers WHERE id_user = $user) UNION (SELECT fichiers.* FROM fichiers,assigner WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT autoriser.id_tag from autoriser WHERE autoriser.id_user = $user))) UNION (SELECT fichiers.* FROM fichiers,assigner,tags WHERE (fichiers.id_file = assigner.id_file AND assigner.id_tag IN (SELECT tags.id_tag from tags WHERE tags.id_user = $user))))INTERSECT";
 
 
+
     //same as getAllFiles
     if($request->getQueryParam("mine")=="true"){
         $sql .= " SELECT * FROM fichiers WHERE id_user = ".$_SESSION['id'] ." INTERSECT ";
@@ -228,8 +229,9 @@ function getAllAllowedFiles($request, $response, $args)
         $sql .= "(SELECT * FROM fichiers WHERE type = '".$request->getQueryParam("extension")."') INTERSECT ";
     }
 
-    if($request->getQueryParam("sansTag")=="true"){
+    if($request->getQueryParam("tagLess")=="true"){
         $sql .= " (SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner) ) INTERSECT ";
+        echo $sql;
     }
 
     $ligne = $request->getQueryParam("searchBar");
