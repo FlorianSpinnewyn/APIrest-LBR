@@ -52,7 +52,7 @@ function login($request,$response,$args){
         if(!$userFound){
             addLog($request->getMethod(). " ".$request->getUri()->getPath(),404);
             $response->withHeader('Access-Control-Allow-Origin', '*')->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-            return $response->withStatus(404)->getBody()->write($mail." n'existe pas");
+            return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
 
         }
         //if the password is not correct
