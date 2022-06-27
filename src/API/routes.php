@@ -57,6 +57,12 @@ return function (App $app) {
         //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
         return $data;
     });
+    $app->get('/files/{file}/thumbnail', function (Request $request, Response $response, array $args) use ($container) {
+        $data = getFile($request,$response,$args,true);
+        //addLog($request->getMethod(). " ".$request->getUri()->getPath(),$data->getStatusCode());
+        return $data;
+    });
+
 
     $app->post('/files', function (Request $request, Response $response, array $args) use ($container) {
         $data = addFile($request,$response,$args);

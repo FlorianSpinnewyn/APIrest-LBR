@@ -231,7 +231,6 @@ function getAllAllowedFiles($request, $response, $args)
 
     if($request->getQueryParam("tagLess")=="true"){
         $sql .= " (SELECT * FROM fichiers WHERE fichiers.id_file not in (SELECT id_file FROM assigner) ) INTERSECT ";
-        echo $sql;
     }
 
     $ligne = $request->getQueryParam("searchBar");
@@ -370,7 +369,7 @@ function getAllAllowedFiles($request, $response, $args)
 }
 
 //get file by id
-function getFile($request,$response, $args){
+function getFile($request,$response, $args,$value = null){
     //check if user is logged in
     $res = isSession($request,$response,$args);
     if($res ){
@@ -401,21 +400,29 @@ function getFile($request,$response, $args){
 
         if(!empty($filename)){
             // Check file is exists on given path.
-            if(file_exists($download_file))
-            {
+            if (file_exists($download_file)) {
                 // Get file size.
+
+
                 $filesize = filesize($download_file);
                 //get file type
-                //define the headers and read the file to send
+
                 // Download file.
-                header("Content-Type: ".explode('.',$file->type)[0]);
+                $response->withHeader("Content-Type",explode('.', $file->type)[0]);
+
+
                 header("Content-Length: " . $filesize);
                 header("Content-Disposition: attachment; filename=$filename");
                 header("Content-Transfer-Encoding: binary");
-                readfile($download_file);
-
+                if($value != null){
+                    createThumbnail($filename,250,"../files","../files/thumbnails/");
+                }
+                else {
+                    readfile($download_file);
+                }
                 return $response
-                    ->withStatus(200);
+                    ->withStatus(200)
+                    ->withHeader('content-type',explode('.', $file->type)[0]);
             }
             else
             {
@@ -439,7 +446,7 @@ function getFile($request,$response, $args){
 }
 
 //get file for guest
-function getAllowedFile($request,$response, $args){
+function getAllowedFile($request,$response, $args,$value = null){
     $id_file = $args['file'];
     $user = $_SESSION['id'];
     //same but with restricted access
@@ -481,6 +488,8 @@ function getAllowedFile($request,$response, $args){
                 // Check file is exists on given path.
                 if (file_exists($download_file)) {
                     // Get file size.
+
+
                     $filesize = filesize($download_file);
                     //get file type
 
@@ -489,22 +498,27 @@ function getAllowedFile($request,$response, $args){
                     header("Content-Length: " . $filesize);
                     header("Content-Disposition: attachment; filename=$filename");
                     header("Content-Transfer-Encoding: binary");
-                    readfile($download_file);
+                    if ($value != null) {
+                        createThumbnail($filename, 250, "../files", "../files/thumbnails/");
+                    }
+                    else {
+                            readfile($download_file);
+                        }
+                        return $response
+                            ->withStatus(200)->withHeader('content-type', explode('.', $file->type)[0]);
+                    } else {
+                        echo 'File does not exists on given path';
+                        return $response
+                            ->withHeader('content-type', 'application/json')
+                            ->withStatus(404);
+                    }
 
-                    return $response
-                        ->withStatus(200);
-                } else {
-                    echo 'File does not exists on given path';
-                    return $response
-                        ->withHeader('content-type', 'application/json')
-                        ->withStatus(404);
                 }
-
             }
 
 
         }
-        }
+
         $response->getBody()->write("file not found");
         return $response
             ->withHeader('content-type', 'application/json')
@@ -884,5 +898,65 @@ function getStorage($request,$response, $args)
 
 
     return $response->withHeader('content-type', 'application/json')->withStatus(200);
+
+}
+
+
+
+function createThumbnail($image_name,$new_width,$uploadDir,$moveToDir)
+{
+    $path = $uploadDir."/".$image_name;
+
+    $mime = getimagesize($path);
+
+
+    if($mime['mime']=='image/png') {
+        $src_img = imagecreatefrompng($path);
+    }
+    if($mime['mime']=='image/jpg' || $mime['mime']=='image/jpeg' || $mime['mime']=='image/pjpeg') {
+        $src_img = imagecreatefromjpeg($path);
+    }
+
+    $old_x          =   imageSX($src_img);
+    $old_y          =   imageSY($src_img);
+
+
+        $thumb_w    =   $new_width;
+        $thumb_h    =  (float) $old_y*((float)$new_width/(float)$old_x);
+
+
+
+
+    if($old_x == $old_y)
+    {
+        $thumb_w    =   $new_width;
+        $thumb_h    =   $new_width;
+    }
+
+    $dst_img        =   ImageCreateTrueColor($thumb_w,$thumb_h);
+
+    imagecopyresampled($dst_img,$src_img,0,0,0,0,$thumb_w,$thumb_h,$old_x,$old_y);
+
+
+    // New save location
+    $new_thumb_loc = $moveToDir . $image_name;
+
+    if($mime['mime']=='image/png') {
+        $result = imagepng($dst_img,$new_thumb_loc,8);
+    }
+    if($mime['mime']=='image/gif') {
+        $result = imagegif($dst_img,$new_thumb_loc,8);
+    }
+    if($mime['mime']=='image/jpg' || $mime['mime']=='image/jpeg' || $mime['mime']=='image/pjpeg') {
+        $result = imagejpeg($dst_img,$new_thumb_loc,80);
+    }
+    imagedestroy($dst_img);
+    imagedestroy($src_img);
+    if($result)
+    {
+        readfile($new_thumb_loc);
+
+    }
+    unlink($new_thumb_loc);
 
 }
