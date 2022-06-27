@@ -54,6 +54,7 @@ function login($request,$response,$args){
             $response->withHeader('Access-Control-Allow-Origin', '*')->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
             return $response->withStatus(404)->getBody()->write("utilisateur non trouve");
 
+
         }
         //if the password is not correct
         addLog($request->getMethod(). " ".$request->getUri()->getPath(),400);
