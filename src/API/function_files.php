@@ -411,9 +411,7 @@ function getFile($request,$response, $args,$value = null){
                 $response->withHeader("Content-Type",explode('.', $file->type)[0]);
 
 
-                header("Content-Length: " . $filesize);
-                header("Content-Disposition: attachment; filename=$filename");
-                header("Content-Transfer-Encoding: binary");
+
                 if($value != null){
                     createThumbnail($filename,250,"../files","../files/thumbnails/");
                 }
@@ -494,10 +492,7 @@ function getAllowedFile($request,$response, $args,$value = null){
                     //get file type
 
                     // Download file.
-                    header("Content-Type: " . explode('.', $file->type)[0]);
-                    header("Content-Length: " . $filesize);
-                    header("Content-Disposition: attachment; filename=$filename");
-                    header("Content-Transfer-Encoding: binary");
+                    $response->withHeader('content-type',explode('.', $file->type)[0]);
                     if ($value != null) {
                         createThumbnail($filename, 250, "../files", "../files/thumbnails/");
                     }
