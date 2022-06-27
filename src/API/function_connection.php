@@ -172,7 +172,7 @@ function loginGoogle($request,$response,$args){
             ]);
             $_SESSION['role'] = $user[0]->role;
             $_SESSION['id'] = $user[0]->id_user;
-            $_SESSION['mdpFinal'] = 1;
+            $_SESSION['mdpFinal'] = $user[0]->mdpFinal;
         }
         return $response->withStatus(200)->getBody()->write("utilisateur connecte");
     }
@@ -251,12 +251,14 @@ function changePassword($request,$response,$args)
             //update the new password
             $user = $user[0];
             $password = $request->getParam("password");
+
             $password = password_hash($password, PASSWORD_BCRYPT);
-            $sql = "UPDATE utilisateurs SET mdp = '" . $password . "',token_mdp = NULL WHERE id_user = '$user->id_user'";
+            $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$user->id_user';UPDATE utilisateurs SET token_mdp = NULL WHERE id_user = '$user->id_user';UPDATE utilisateurs SET mdpFinal = 1 WHERE id_user = '$user->id_user'";
 
             $db = new db();
             $db = $db->connect();
             $stmt = $db->query($sql);
+            $user = $stmt->fetchAll(PDO::FETCH_OBJ);
             $db = null;
             return $response->withStatus(200)->getBody()->write("Mot de passe changé");
         }
@@ -277,7 +279,7 @@ function changePassword($request,$response,$args)
     //if the user is logged in and the password is not null, change the password
     $password = $request->getParam("password");
     $password = password_hash($password, PASSWORD_BCRYPT);
-    $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$_SESSION[id]'";
+    $sql = "UPDATE utilisateurs SET mdp = '$password' WHERE id_user = '$_SESSION[id]'; UPDATE utilisateurs SET mdpFinal = 1 WHERE id_user = '$_SESSION[id]'";
     try{
         $db = new db();
         $db = $db->connect();
